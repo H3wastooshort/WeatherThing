@@ -17,6 +17,19 @@
 #define GPRS_LOGIN     ""    // replace with your GPRS login
 #define GPRS_PASSWORD  "" // replace with your GPRS password
 
+//WU Credentials
+char serverWU[] = "weatherstation.wunderground.com";
+char pathWU[] = "/weatherstation/updateweatherstation.php";
+char WU_ID[] = "random";
+char WU_PASS [] = "data";
+
+//SMS Stuff
+char* sos_number = "42069";
+
+//Sensor config
+#define WNW_SENS //Wind and Weather/Rain sensors upload enable
+#define MPH_PER_RPM 1.5 //RPM per MPH
+#define IN_PER_BCKT 0.1 //Inches per rain sensor flip
 
 //Library defines
 
@@ -26,12 +39,6 @@ GSMSim gsm(9, 10, 11);
 OneWire oneWire(12);
 DallasTemperature ds(&oneWire);
 DeviceAddress insideThermometer;
-
-//WU Credentials
-char serverWU[] = "weatherstation.wunderground.com";
-char pathWU[] = "/weatherstation/updateweatherstation.php";
-char WU_ID[] = "not";
-char WU_PASS [] = "today";
 
 //OWM Credentials
 
@@ -64,6 +71,7 @@ float rain_24h    = 0;
 int gsmsigp = 100;
 
 bool noerrors = true;
+bool nogsmerr = true;
 
 //interrupts
 
@@ -140,6 +148,7 @@ void init_gsm() {
   if (!gsm.setRingerVolume(100)) {
     Serial.println(F("No GSM/GPRS Module detected!"));
     noerrors = false;
+    nogsmerr = false;
     Serial.println(F("ERROR"));
     Serial.println(F(""));
     return;
@@ -147,12 +156,14 @@ void init_gsm() {
   if (!gsm.isSimInserted()) {
     Serial.println(F("No SIM Card detected!"));
     noerrors = false;
+    nogsmerr = false;
     Serial.println(F("ERROR"));
     Serial.println(F(""));
     return;
   }
   Serial.print(F("IMEI: "));
   Serial.println(gsm.moduleIMEI());
+  gsm.smsTextMode(true);
   gsm.setRingerVolume(100);
   gsm.setSpeakerVolume(100);
   delay(100);
@@ -168,8 +179,13 @@ void init_all() {
   init_si1145();
   init_ds18b20();
   init_gsm();
+
   if (!noerrors) {
     Serial.println(F("!! OH SHIT! Something went wrong! !!"));
+    if (nogsmerr) {
+      Serial.println(F("Reporting via SMS."));
+      gsm.smsSend(sos_number, "Some sensors reported missing while initializing!");
+    }
     while (true) {
       digitalWrite(13, HIGH);
       delay(100);
@@ -177,6 +193,8 @@ void init_all() {
       delay(100);
     }
   }
+  gsm.smsSend(sos_number, "Initialized without errors.");
+  Serial.println(F("INIT OK"));
 }
 
 //reconnecting and disconnecting gprs
@@ -201,7 +219,7 @@ void connect_gprs() {
   Serial.println(F(""));
 }
 
-void disconect_gprs() {
+void disconnect_gprs() {
   gsm.gprsCloseConn();
   Serial.println(F("GPRS disconnected."));
 }
@@ -346,6 +364,7 @@ void uploadWU() {
   req += press_in;
   req += "&soiltempf=";
   req += soiltempf;
+#ifdef WNW_SENS
   req += "&windspeedmph=";
   req += wind_mph;
   req += "&windspdmph_avg2m=";
@@ -356,7 +375,9 @@ void uploadWU() {
   req += wind_dir;
   req += "&winddir_avg2m=";
   req += wind_dir_2m;
-
+#endif
+  Serial.println(F("Request: "));
+  Serial.println(req);
   String http = gsm.gprsHTTPGet(req, true);
   Serial.print(F("Response: "));
   Serial.println(http);
