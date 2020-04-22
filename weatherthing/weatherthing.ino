@@ -12,9 +12,6 @@
 
 #include <GSMSim.h>
 
-// PIN Number
-#define PINNUMBER "6423" //6=N 4=I 2=C 3=E
-
 // APN data for Netzclub
 #define GPRS_APN       "pinternet.interkom.de" // replace your GPRS APN
 #define GPRS_LOGIN     ""    // replace with your GPRS login
@@ -33,8 +30,8 @@ DeviceAddress insideThermometer;
 //WU Credentials
 char serverWU[] = "weatherstation.wunderground.com";
 char pathWU[] = "/weatherstation/updateweatherstation.php";
-char WU_ID[] = "LOL";
-char WU_PASS [] = "NO";
+char WU_ID[] = "not";
+char WU_PASS [] = "today";
 
 //OWM Credentials
 
@@ -63,6 +60,8 @@ int wind_dir      = 0;
 float wind_dir_2m = 0;
 float rain_1h     = 0;
 float rain_24h    = 0;
+
+int gsmsigp = 100;
 
 bool noerrors = true;
 
@@ -109,10 +108,14 @@ void init_ds18b20() {
   ds.begin();
 
   // locate devices on the bus
-  Serial.print(F("Locating devices..."));
   ds.begin();
   bool dsdev = ds.getAddress(insideThermometer, 0);
-
+  if (!dsdev) {
+    noerrors = false;
+    Serial.println(F("ERROR"));
+    Serial.println(F(""));
+    return;
+  }
   // report parasite power requirements
   Serial.print(F("Parasite power is "));
   if (ds.isParasitePowerMode()) Serial.println(F("ON."));
@@ -129,16 +132,18 @@ void init_ds18b20() {
     Serial.println(F("OK"));
     Serial.println(F(""));
   }
-  else {
-    noerrors = false;
-    Serial.println(F("ERROR"));
-    Serial.println(F(""));
-  }
 }
 
 void init_gsm() {
   Serial.println(F("Init: GSM"));
   gsm.start(4800);
+  if (!gsm.setRingerVolume(100)) {
+    Serial.println(F("No GSM/GPRS Module detected!"));
+    noerrors = false;
+    Serial.println(F("ERROR"));
+    Serial.println(F(""));
+    return;
+  }
   if (!gsm.isSimInserted()) {
     Serial.println(F("No SIM Card detected!"));
     noerrors = false;
@@ -151,6 +156,31 @@ void init_gsm() {
   gsm.setRingerVolume(100);
   gsm.setSpeakerVolume(100);
   delay(100);
+  connect_gprs();
+  disconnect_gprs();
+  Serial.println(F("GSM OK"));
+  Serial.println(F(""));
+  digitalWrite(13, LOW);
+}
+
+void init_all() {
+  init_bme280();
+  init_si1145();
+  init_ds18b20();
+  init_gsm();
+  if (!noerrors) {
+    Serial.println(F("!! OH SHIT! Something went wrong! !!"));
+    while (true) {
+      digitalWrite(13, HIGH);
+      delay(100);
+      digitalWrite(13, LOW);
+      delay(100);
+    }
+  }
+}
+
+//reconnecting and disconnecting gprs
+void connect_gprs() {
   Serial.println(F("Connecting Network"));
   while (!gsm.isRegistered()) {
     Serial.print(F("."));
@@ -169,26 +199,11 @@ void init_gsm() {
   Serial.print(F("Connected!\nIP:"));
   Serial.println(gsm.gprsGetIP());
   Serial.println(F(""));
-
-  Serial.println(F("GSM OK"));
-  Serial.println(F(""));
-  digitalWrite(13, LOW);
 }
 
-void init_all() {
-  init_bme280();
-  init_si1145();
-  init_ds18b20();
-  init_gsm();
-  if (!noerrors) {
-    Serial.println(F("!! OH SHIT! Something went wrong! !!"));
-    while (true) {
-      digitalWrite(13, HIGH);
-      delay(500);
-      digitalWrite(13, LOW);
-      delay(500);
-    }
-  }
+void disconect_gprs() {
+  gsm.gprsCloseConn();
+  Serial.println(F("GPRS disconnected."));
 }
 
 //Write sensors to var
@@ -245,6 +260,11 @@ int calc_windvane(int io) {
   return (360);
 }
 
+void get_gsm() {
+  Serial.println(F("Getting GSM."));
+  gsmsigp = map(gsm.signalQuality(), 0, 31, 0, 100);
+}
+
 void get_sensors() {
   Serial.println(F("Getting Sensors."));
   Serial.println(F(""));
@@ -254,6 +274,47 @@ void get_sensors() {
   get_windvane();
   Serial.println(F(""));
   Serial.println(F("Done."));
+  Serial.println(F(""));
+}
+
+//print values
+
+void print_sensors() {
+  Serial.println(F("Sensor Values:"));
+  Serial.println(F(""));
+  Serial.println(F("Temp:"));
+  Serial.println(tempc);
+  Serial.println(tempf);
+  Serial.println(F("Dew:"));
+  Serial.println(dewptc);
+  Serial.println(dewptf);
+  Serial.println(F("Hum:"));
+  Serial.println(humidity);
+  Serial.println(F("Press:"));
+  Serial.println(press_hpa);
+  Serial.println(press_in);
+  Serial.println(F("Soil:"));
+  Serial.println(soiltempc);
+  Serial.println(soiltempf);
+  Serial.println(F("UV:"));
+  Serial.println(uv_index);
+  Serial.println(F("IR:"));
+  Serial.println(ir);
+  Serial.println(F("Vis:"));
+  Serial.println(vis);
+  Serial.println(F("Speed:"));
+  Serial.println(wind_mph);
+  Serial.println(wind_mph_2m);
+  Serial.println(F("Gusts:"));
+  Serial.println(gust_mph);
+  Serial.println(F("Dir:"));
+  Serial.println(wind_dir);
+  Serial.println(wind_dir_2m);
+  Serial.println(F("Rain:"));
+  Serial.println(rain_1h);
+  Serial.println(rain_24h);
+  Serial.println(F("GSM Signal %:"));
+  Serial.println(gsmsigp);
   Serial.println(F(""));
 }
 
@@ -322,11 +383,14 @@ unsigned long timenow_upload = 0;
 void loop() {
   // put your main code here, to run repeatedly:
   get_sensors();
+  print_sensors();
   calc_avgs();
   if (millis() >= timenow_upload + uploadinterval) {
     timenow_upload += uploadinterval;
+    connect_gprs();
     uploadWU();
     uploadOWM();
+    disconnect_gprs();
   }
   delay(500);
 }
