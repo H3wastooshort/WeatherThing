@@ -17,6 +17,8 @@
 #define GPRS_LOGIN     ""    // replace with your GPRS login
 #define GPRS_PASSWORD  "" // replace with your GPRS password
 
+//#define DEBUGMODE 
+
 //WU Credentials
 char serverWU[] = "weatherstation.wunderground.com";
 char pathWU[] = "/weatherstation/updateweatherstation.php";
@@ -102,6 +104,7 @@ void rain_cnt() {
 //init sensors
 
 void init_bme280() {
+#ifdef DEBUGMODE
   Serial.println(F("Init: BME280"));
   if (bme.begin()) {
     Serial.println(F("OK"));
@@ -112,6 +115,11 @@ void init_bme280() {
     Serial.println(F("ERROR"));
     Serial.println(F(""));
   }
+#else
+  if(!(bme.begin()) {
+    noerrors = false
+  }
+#endif
 }
 
 void init_si1145 () {
@@ -140,22 +148,24 @@ void init_ds18b20() {
     Serial.println(F(""));
     return;
   }
+#ifdef DEBUGMODE
   // report parasite power requirements
   Serial.print(F("Parasite power is "));
   if (ds.isParasitePowerMode()) Serial.println(F("ON."));
   else Serial.println(F("OFF."));
-
+#endif
+  
   // set the resolution to 9 bit (Each Dallas/Maxim device is capable of several different resolutions)
   ds.setResolution(insideThermometer, 9);
-
+#ifdef DEBUGMODE
   Serial.print(F("Resolution: "));
   Serial.print(ds.getResolution(insideThermometer), DEC);
   Serial.println();
-
   if (dsdev) {
     Serial.println(F("OK"));
     Serial.println(F(""));
   }
+#endif
 }
 
 void init_gsm() {
