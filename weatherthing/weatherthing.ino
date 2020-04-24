@@ -18,13 +18,13 @@
 #define GPRS_PASSWORD  "" // replace with your GPRS password
 
 //WU Credentials
-char serverWU[] = "weatherstation.wunderground.com";
-char pathWU[] = "/weatherstation/updateweatherstation.php";
-char WU_ID[] = "heck";
-char WU_PASS [] = "no";
+const char PROGMEM serverWU[] = "weatherstation.wunderground.com";
+const char PROGMEM pathWU[] = "/weatherstation/updateweatherstation.php";
+const char PROGMEM WU_ID[] = "x";
+const char PROGMEM WU_PASS [] = "y";
 
 //SMS Stuff
-char* sos_number = "12345678";
+char* sos_number = "87867789";
 
 //Sensor config
 #define WNW_SENS //Wind and Weather/Rain sensors upload enable
@@ -62,18 +62,21 @@ float ir = 0;
 
 float wind_mph    = 0;
 float wind_mph_2m = 0;
-float gust_mph    = 0;
 int wind_dir      = 0;
 float wind_dir_2m = 0;
 float rain_1h     = 0;
 float rain_day    = 0;
-uint8_t rainHour[60];
-uint8_t wind2min[4];
-int dir2min[4];
-int8_t minute = 0;
-int8_t hour = 0;
-int raintime = 0;
-int rainlast = 0;
+uint16_t rainHour[60];
+uint8_t wind2min[8];
+int dir2min[8];
+int8_t second   = 0;
+int8_t minute   = 0;
+int8_t hour     = 0;
+int raintime    = 0;
+int rainlast    = 0;
+uint16_t lastWindCheck = 0;
+uint8_t windClicks = 0;
+uint8_t avg_index = 0;
 
 int8_t gsmsigp = 100;
 
@@ -86,7 +89,7 @@ uint8_t x = 0;
 //interrupts
 
 void wind_cnt() {
-
+  windClicks += 1;
 }
 
 void rain_cnt() {
@@ -95,6 +98,7 @@ void rain_cnt() {
   if (raininterval > 10) {
     rain_day += IN_PER_BCKT * 100;
     rainHour[minute] += IN_PER_BCKT * 100;
+    rainHour[minute + 1] = 0;
     rainlast = raintime;
   }
 }
@@ -215,9 +219,10 @@ void init_all() {
 
 //reconnecting and disconnecting gprs
 void connect_gprs() {
-  Serial.println(F("Connecting Network"));
+  Serial.print(F("Connecting Network"));
   while (!gsm.isRegistered()) {
     Serial.print(F("."));
+    delay(500);
   }
   Serial.println(F(""));
   Serial.print(F("Connected to "));
@@ -300,10 +305,23 @@ int calc_windvane(int io) {
   return (360);
 }
 
+
+
+void get_windspeed() {
+  float deltaTime = millis() - lastWindCheck;
+  deltaTime /= 1000;
+  float windSpeed = (float)windClicks / deltaTime;
+  windClicks = 0;
+  lastWindCheck = millis();
+  windSpeed *= MPH_PER_RPM;
+  wind_mph = windSpeed;
+
+}
+
 void get_gsm() {
   Serial.println(F("Getting GSM."));
   gsmsigp = map(gsm.signalQuality(), 0, 31, 0, 100);
-  gsm.timeGet(x,x,x, hour, minute,x);
+  gsm.timeGet(x, x, x, hour, minute, second);
 }
 
 void get_sensors() {
@@ -313,6 +331,7 @@ void get_sensors() {
   get_si1145();
   get_ds18b20();
   get_windvane();
+  get_windspeed();
   get_gsm();
   Serial.println(F(""));
   Serial.println(F("Done."));
@@ -347,8 +366,6 @@ void print_sensors() {
   Serial.println(F("Speed:"));
   Serial.println(wind_mph);
   Serial.println(wind_mph_2m);
-  Serial.println(F("Gusts:"));
-  Serial.println(gust_mph);
   Serial.println(F("Dir:"));
   Serial.println(wind_dir);
   Serial.println(wind_dir_2m);
@@ -361,8 +378,19 @@ void print_sensors() {
 }
 
 //Calculate all of the averages
+int avginterval = 15000;
+unsigned long timenow_avg = 0;
 
 void calc_avgs() {
+  if (millis() >= timenow_avg + avginterval) {
+    timenow_avg += avginterval;
+    avg_index += 1;
+    if (avg_index >= 8) {
+      avg_index = 0;
+    }
+    wind2m[avg_index] = wind_mph;
+    dir2m[avg_index] = wind_dir;
+  }
   //Rain Average
   int sum0 = 0;
   for (int thisReading = 0; thisReading < 60; thisReading++) {
@@ -387,6 +415,10 @@ void calc_avgs() {
   }
   // calculate the average:
   wind_dir_2m = (sum2 / 4) / 100;
+
+  if (hour == 1 and minute == 1 and second == 1) {
+    rain_day = 0;
+  }
 
 }
 //Upload to PWS Networks
@@ -416,8 +448,6 @@ void uploadWU() {
   req += wind_mph;
   req += "&windspdmph_avg2m=";
   req += wind_mph_2m;
-  req += "&windgustmph=";
-  req += gust_mph;
   req += "&winddir=";
   req += wind_dir;
   req += "&winddir_avg2m=";
