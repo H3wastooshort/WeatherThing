@@ -20,11 +20,11 @@
 //WU Credentials
 const char PROGMEM serverWU[] = "weatherstation.wunderground.com";
 const char PROGMEM pathWU[] = "/weatherstation/updateweatherstation.php";
-const char PROGMEM WU_ID[] = "x";
-const char PROGMEM WU_PASS [] = "y";
+const char PROGMEM WU_ID[] = "timeis";
+const char PROGMEM WU_PASS [] = "relative";
 
 //SMS Stuff
-char* sos_number = "87867789";
+char* sos_number = "1234567890";
 
 //Sensor config
 #define WNW_SENS //Wind and Weather/Rain sensors upload enable
@@ -383,7 +383,7 @@ unsigned long timenow_avg = 0;
 
 void calc_avgs() {
   if (millis() >= timenow_avg + avginterval) {
-    timenow_avg += avginterval;
+    timenow_avg = millis();
     avg_index += 1;
     if (avg_index >= 8) {
       avg_index = 0;
@@ -484,7 +484,7 @@ void loop() {
   print_sensors();
   calc_avgs();
   if (millis() >= timenow_upload + uploadinterval) {
-    timenow_upload += uploadinterval;
+    timenow_upload = millis();
     connect_gprs();
     uploadWU();
     uploadOWM();
