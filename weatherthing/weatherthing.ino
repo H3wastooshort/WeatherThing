@@ -18,14 +18,17 @@
 #define GPRS_PASSWORD  "" // replace with your GPRS password
 
 //WU Credentials
-const char PROGMEM serverWU[] = "weatherstation.wunderground.com";
-const char PROGMEM pathWU[] = "/weatherstation/updateweatherstation.php";
-const char PROGMEM WU_ID[] = "timeis";
-const char PROGMEM WU_PASS [] = "relative";
+const char serverWU[] = "weatherstation.wunderground.com";
+const char pathWU[] = "/weatherstation/updateweatherstation.php";
+const char WU_ID[] = "nope";
+const char WU_PASS [] = "avi";
 
 //SMS Stuff
-char* sos_number = "1234567890";
+char* sos_number = "6136010634610634740";
 
+//NTP Things
+#define TIMEZONE 1
+#define NTPSERVER "162.159.200.123"
 //Sensor config
 #define WNW_SENS //Wind and Weather/Rain sensors upload enable
 #define MPH_PER_RPM 1.492 //RPM per MPH
@@ -35,7 +38,7 @@ char* sos_number = "1234567890";
 
 Adafruit_BME280 bme;
 Adafruit_SI1145 uv = Adafruit_SI1145();
-GSMSim gsm(9, 10, 11);
+GSMSim gsm(9, 10, 11, 8);
 OneWire oneWire(12);
 DallasTemperature ds(&oneWire);
 DeviceAddress insideThermometer;
@@ -107,7 +110,7 @@ void rain_cnt() {
 
 void init_bme280() {
   Serial.println(F("Init: BME280"));
-  if (bme.begin()) {
+  if (bme.begin(0x76)) {
     Serial.println(F("OK"));
     Serial.println(F(""));
   }
@@ -183,6 +186,8 @@ void init_gsm() {
   }
   Serial.print(F("IMEI: "));
   Serial.println(gsm.moduleIMEI());
+  Serial.println("Setting NTP server");
+  Serial.println(gsm.timeSetServer(TIMEZONE, NTPSERVER));
   gsm.smsTextMode(true);
   gsm.setRingerVolume(100);
   gsm.setSpeakerVolume(100);
@@ -388,16 +393,16 @@ void calc_avgs() {
     if (avg_index >= 8) {
       avg_index = 0;
     }
-    wind2m[avg_index] = wind_mph;
-    dir2m[avg_index] = wind_dir;
+    wind2min[avg_index] = wind_mph;
+    dir2min[avg_index] = wind_dir;
   }
-  //Rain Average
+  //Rain sum
   int sum0 = 0;
   for (int thisReading = 0; thisReading < 60; thisReading++) {
     sum0 += rainHour[thisReading];
   }
-  // calculate the average:
-  rain_1h = (sum0 / 60) / 100;
+  // calculate the sum:
+  rain_1h = sum0 / 100;
 
 
   //Wind Average
@@ -415,7 +420,7 @@ void calc_avgs() {
   }
   // calculate the average:
   wind_dir_2m = (sum2 / 4) / 100;
-
+  //reset day counter
   if (hour == 1 and minute == 1 and second == 1) {
     rain_day = 0;
   }
@@ -453,7 +458,7 @@ void uploadWU() {
   req += "&winddir_avg2m=";
   req += wind_dir_2m;
 #endif
-  Serial.println(F("Request: "));
+  Serial.print(F("Request: "));
   Serial.println(req);
   String http = gsm.gprsHTTPGet(req, true);
   Serial.print(F("Response: "));
@@ -467,6 +472,9 @@ void uploadOWM() {
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  pinMode(13, OUTPUT);
+  pinMode(8, OUTPUT);
+  Wire.setClock(10000);
   digitalWrite(13, HIGH);
   init_all();
   digitalWrite(13, LOW);
@@ -483,6 +491,7 @@ void loop() {
   get_sensors();
   print_sensors();
   calc_avgs();
+  
   if (millis() >= timenow_upload + uploadinterval) {
     timenow_upload = millis();
     connect_gprs();
