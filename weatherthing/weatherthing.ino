@@ -430,7 +430,7 @@ void calc_avgs() {
 
 void uploadWU() {
   Serial.println(F("Uploading to Wunderground"));
-  String req = "http://";
+  String req = "";
   req += serverWU;
   req += pathWU;
   req += "?ID=";
