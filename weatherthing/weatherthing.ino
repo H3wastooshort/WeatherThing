@@ -421,7 +421,7 @@ void calc_avgs() {
   // calculate the average:
   wind_dir_2m = (sum2 / 4) / 100;
   //reset day counter
-  if (hour == 1 and minute == 1 and second == 1) {
+  if (hour == 1 and minute == 1) {
     rain_day = 0;
   }
 
