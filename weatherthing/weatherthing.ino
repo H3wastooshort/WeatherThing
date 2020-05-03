@@ -1,14 +1,18 @@
+#include <Wire.h>
+
+#include <OneWire.h>
+
 #include <Adafruit_Sensor.h>
 
 #include <Adafruit_SI1145.h>
 
 #include <Adafruit_BME280.h>
 
-#include <Wire.h>
-
-#include <OneWire.h>
-
 #include <DallasTemperature.h>
+
+#include <DHT.h>
+
+#include <LiquidCrystal.h>
 
 #include <GSMSim.h>
 
@@ -20,17 +24,17 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "nope";
-const char WU_PASS [] = "avi";
+const char WU_ID[] = "nah";
+const char WU_PASS [] = "NO!";
 
 //SMS Stuff
-char* sos_number = "6136010634610634740";
+char* sos_number = "+6556987483654";
 
 //NTP Things
 #define TIMEZONE 1
 #define NTPSERVER "162.159.200.123"
 //Sensor config
-#define WNW_SENS //Wind and Weather/Rain sensors upload enable
+//#define WNW_SENS //Wind and Weather/Rain sensors upload enable
 #define MPH_PER_RPM 1.492 //RPM per MPH
 #define IN_PER_BCKT 0.011 //Inches per rain sensor flip
 
@@ -38,10 +42,12 @@ char* sos_number = "6136010634610634740";
 
 Adafruit_BME280 bme;
 Adafruit_SI1145 uv = Adafruit_SI1145();
-GSMSim gsm(9, 10, 11, 8);
+GSMSim gsm(10, 11, 9, 52, true);
 OneWire oneWire(12);
 DallasTemperature ds(&oneWire);
 DeviceAddress insideThermometer;
+DHT dht(8, DHT11);
+LiquidCrystal lcd(39, 43, 45, 47, 49, 51);
 
 //OWM Credentials
 
@@ -58,6 +64,9 @@ float press_hpa = 0;
 float press_in  = 0;
 float soiltempf = 0;
 float soiltempc = 0;
+float idtempc   = 0;
+float idtempf   = 0;
+float idhumid   = 0;
 
 int8_t uv_index = 0;
 float vis = 0;
@@ -137,7 +146,6 @@ void init_si1145 () {
 void init_ds18b20() {
   Serial.println(F("Init: DS18B20"));
   ds.begin();
-
   // locate devices on the bus
   ds.begin();
   bool dsdev = ds.getAddress(insideThermometer, 0);
@@ -165,9 +173,26 @@ void init_ds18b20() {
   }
 }
 
+void init_dht11() {
+  Serial.println(F("Init: DHT11"));
+  dht.begin();
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+  if (!isnan(h) || !isnan(t)) {
+    Serial.println(F("OK"));
+    Serial.println(F(""));
+  }
+  else {
+    noerrors = false;
+    Serial.println(F("ERROR"));
+    Serial.println(F(""));
+  }
+}
+
 void init_gsm() {
   Serial.println(F("Init: GSM"));
-  gsm.start(4800);
+  gsm.start();
+  delay(500);
   if (!gsm.setRingerVolume(100)) {
     Serial.println(F("No GSM/GPRS Module detected!"));
     noerrors = false;
@@ -176,6 +201,7 @@ void init_gsm() {
     Serial.println(F(""));
     return;
   }
+  delay(50);
   if (!gsm.isSimInserted()) {
     Serial.println(F("No SIM Card detected!"));
     noerrors = false;
@@ -184,12 +210,17 @@ void init_gsm() {
     Serial.println(F(""));
     return;
   }
+  delay(50);
   Serial.print(F("IMEI: "));
   Serial.println(gsm.moduleIMEI());
+  delay(50);
   Serial.println("Setting NTP server");
   Serial.println(gsm.timeSetServer(TIMEZONE, NTPSERVER));
+  delay(50);
   gsm.smsTextMode(true);
+  delay(50);
   gsm.setRingerVolume(100);
+  delay(50);
   gsm.setSpeakerVolume(100);
   delay(100);
   connect_gprs();
@@ -200,26 +231,35 @@ void init_gsm() {
 }
 
 void init_all() {
+  lcd.print("INIT");
   init_bme280();
+  lcd.print(".");
   init_si1145();
+  lcd.print(".");
   init_ds18b20();
+  lcd.print(".");
+  init_dht11();
+  lcd.print(".");
   init_gsm();
+  lcd.print(". ");
 
   if (!noerrors) {
     Serial.println(F("!! OH SHIT! Something went wrong! !!"));
+    lcd.print("ERROR");
     if (nogsmerr) {
       Serial.println(F("Reporting via SMS."));
       gsm.smsSend(sos_number, "Some sensors reported missing while initializing!");
     }
     while (true) {
-      digitalWrite(13, HIGH);
+      digitalWrite(53, HIGH);
       delay(100);
-      digitalWrite(13, LOW);
+      digitalWrite(53, LOW);
       delay(100);
     }
   }
   gsm.smsSend(sos_number, "Initialized without errors.");
   Serial.println(F("INIT OK"));
+  lcd.print("OK");
 }
 
 //reconnecting and disconnecting gprs
@@ -229,25 +269,29 @@ void connect_gprs() {
     Serial.print(F("."));
     delay(500);
   }
+  delay(50);
   Serial.println(F(""));
   Serial.print(F("Connected to "));
   Serial.println(gsm.operatorName());
   Serial.println(F(""));
-
+  delay(50);
   Serial.println(F("Connecting GPRS"));
   gsm.gprsConnectBearer(GPRS_APN, GPRS_LOGIN, GPRS_PASSWORD);
   while (!gsm.gprsIsConnected()) {
     Serial.print(F("."));
   }
+  delay(50);
   Serial.println(F(""));
   Serial.print(F("Connected!\nIP:"));
   Serial.println(gsm.gprsGetIP());
-
+  delay(50);
   Serial.println(F("Getting Time"));
   gsm.timeSyncFromServer();
+  delay(5000);
   Serial.print(F("DateTime: "));
   Serial.println(gsm.timeGetRaw());
   Serial.println(F(""));
+  delay(50);
 
 }
 
@@ -281,6 +325,13 @@ void get_ds18b20() {
   ds.requestTemperatures();
   soiltempc = ds.getTempC(insideThermometer);
   soiltempf = DallasTemperature::toFahrenheit(soiltempc);
+}
+
+void get_dht11() {
+  Serial.println(F("Getting DHT11."));
+  idtempc = dht.readTemperature();
+  idtempf = dht.readTemperature(true);
+  idhumid = dht.readHumidity();
 }
 
 void get_windvane() {
@@ -335,6 +386,7 @@ void get_sensors() {
   get_bme280();
   get_si1145();
   get_ds18b20();
+  get_dht11();
   get_windvane();
   get_windspeed();
   get_gsm();
@@ -368,6 +420,11 @@ void print_sensors() {
   Serial.println(ir);
   Serial.println(F("Vis:"));
   Serial.println(vis);
+  Serial.println(F("Indoor Temp:"));
+  Serial.println(idtempc);
+  Serial.println(idtempf);
+  Serial.println(F("Indoor Hum:"));
+  Serial.println(idhumid);
   Serial.println(F("Speed:"));
   Serial.println(wind_mph);
   Serial.println(wind_mph_2m);
@@ -380,6 +437,27 @@ void print_sensors() {
   Serial.println(F("GSM Signal %:"));
   Serial.println(gsmsigp);
   Serial.println(F(""));
+}
+
+void print_lcd() {
+  lcd.clear();
+  lcd.print("T: ");
+  lcd.print(tempc);
+  lcd.print("C H: ");
+  lcd.print((int)humidity);
+  lcd.print("%");
+  lcd.setCursor(0, 1);
+  lcd.print("S: ");
+  lcd.print((int)soiltempc);
+  lcd.print("C P: ");
+  lcd.print(press_hpa);
+  lcd.print("hPa");
+  lcd.setCursor(0, 2);
+  lcd.print("IT: ");
+  lcd.print(idtempc);
+  lcd.print("C IH: ");
+  lcd.print((int)idhumid);
+  lcd.print("%");
 }
 
 //Calculate all of the averages
@@ -448,6 +526,10 @@ void uploadWU() {
   req += press_in;
   req += "&soiltempf=";
   req += soiltempf;
+  req += "&indoortempf=";
+  req += idtempf;
+  req += "&indoorhumidity=";
+  req += idhumid;
 #ifdef WNW_SENS
   req += "&windspeedmph=";
   req += wind_mph;
@@ -458,6 +540,7 @@ void uploadWU() {
   req += "&winddir_avg2m=";
   req += wind_dir_2m;
 #endif
+  req += "&softwaretype=wetterdings_mega_2560";
   Serial.print(F("Request: "));
   Serial.println(req);
   String http = gsm.gprsHTTPGet(req, true);
@@ -472,14 +555,34 @@ void uploadOWM() {
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  pinMode(2, INPUT_PULLUP);
+  pinMode(3, INPUT_PULLUP);
   pinMode(13, OUTPUT);
-  pinMode(8, OUTPUT);
+  pinMode(53, OUTPUT);
+  pinMode(52, OUTPUT);
+  pinMode(41, OUTPUT);
+  digitalWrite(41, LOW);
+  attachInterrupt(0 , wind_cnt, FALLING);
+  attachInterrupt(1 , rain_cnt, FALLING);
   Wire.setClock(10000);
+  lcd.begin(20, 4);
+  digitalWrite(13, HIGH);
+  delay(100);
+  digitalWrite(13, LOW);
+  delay(100);
+  digitalWrite(52, HIGH);
+  delay(100);
+  digitalWrite(52, LOW);
+  delay(100);
+  digitalWrite(53, HIGH);
+  delay(100);
+  digitalWrite(53, LOW);
+  delay(100);
   digitalWrite(13, HIGH);
   init_all();
   digitalWrite(13, LOW);
-  attachInterrupt(0 , wind_cnt, FALLING);
-  attachInterrupt(1 , rain_cnt, FALLING);
+  delay(1000);
+  lcd.clear();
 }
 
 //Update interval
@@ -489,15 +592,24 @@ unsigned long timenow_upload = 0;
 void loop() {
   // put your main code here, to run repeatedly:
   get_sensors();
-  print_sensors();
   calc_avgs();
-  
+  print_sensors();
+  print_lcd();
+
   if (millis() >= timenow_upload + uploadinterval) {
     timenow_upload = millis();
+    lcd.setCursor(0, 3);
+    lcd.print("Upload... ");
+    digitalWrite(13, HIGH);
     connect_gprs();
     uploadWU();
     uploadOWM();
     disconnect_gprs();
+    digitalWrite(13, LOW);
+    lcd.print("DONE");
+    delay(1000);
+    lcd.setCursor(0, 3);
+    lcd.print("                    ");
   }
-  delay(500);
+  delay(5000);
 }
