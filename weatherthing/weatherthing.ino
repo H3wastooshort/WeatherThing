@@ -33,11 +33,15 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "adjusted";
-const char WU_PASS [] = "for";
+const char WU_ID[] = "id";
+const char WU_PASS [] = "pass";
+
+//OWM credentials
+const String idOWM = "internalID";
+const String keyOWM = "APIkey";
 
 //SMS Stuff
-char* sos_number = "gsmsim 2.0";
+char* sos_number = "69696969";
 
 //NTP Things
 #define TIMEZONE 1
@@ -113,7 +117,7 @@ bool nogsmerr = true;
 unsigned long timenow_upload = 0;
 
 //trash
-uint8_t x = 0;
+uint16_t x = 0;
 
 //interrupts
 
@@ -265,7 +269,9 @@ void init_all() {
   lcd.print(F("."));
   init_gsm();
   lcd.print(F(". "));
-
+  
+  //noerrors=true; //Ignore all errors and carry on
+  
   if (!noerrors) {
     Serial.println(F("!! OH SHIT! Something went wrong! !!"));
 
@@ -401,7 +407,11 @@ void get_windspeed() {
 void get_gsm() {
   Serial.println(F("Getting GSM."));
   gsmsigp = map(gsm.signalQuality(), 0, 31, 0, 100);
-  ntp.get(x, x, x, hour, minute, second);
+  //ntp.get(x, x, x, hour, minute, second);
+  String tRaw = ntp.getRaw();
+  hour = tRaw.substring(9, 11).toInt();
+  minute = tRaw.substring(12, 14).toInt();
+  second = tRaw.substring(15, 15).toInt();
 }
 
 void get_sensors() {
@@ -597,7 +607,37 @@ void uploadWU() {
 }
 
 void uploadOWM() {
+  String url = "http://api.openweathermap.org/data/3.0/stations?appid=";
+  url += keyOWM;
 
+  String req = "{";
+  req += "\"station_id\": \"";
+  req += idOWM;
+  req += "\", \"temperature\": ";
+  req += tempc;
+  req += ", \"humidity\": ";
+  req += humidity;
+  req += ", \"pressure\": ";
+  req += press_hpa;
+  req += ", \"dew_point\": ";
+  req += dewptf;
+#ifdef WNW_SENS
+  req += ", \"rain_1h\": ";
+  req += rain_1h;
+  req += ", \"rain_24h\": ";
+  req += rain24h;
+  req += ", \"wind_speed\": ";
+  req += (wind_mph * 0.44704 );
+  req += ", \"wind_deg\": ";
+  req += wind_dir;
+#endif
+  req += "}";
+
+  Serial.print(F("Request Data: "));
+  Serial.println(req);
+  String resp = http.post(url, req, "application/json", true);
+  Serial.print(F("Response: "));
+  Serial.println(resp);
 }
 
 void setup() {
