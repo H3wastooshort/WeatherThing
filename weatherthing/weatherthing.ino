@@ -33,15 +33,15 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "id";
-const char WU_PASS [] = "pass";
+const char WU_ID[] = "minor";
+const char WU_PASS [] = "fixes";
 
 //OWM credentials
-const String idOWM = "internalID";
-const String keyOWM = "APIkey";
+const String idOWM = "were";
+const String keyOWM = "made";
 
 //SMS Stuff
-char* sos_number = "69696969";
+char* sos_number = "00000000000";
 
 //NTP Things
 #define TIMEZONE 1
@@ -610,7 +610,7 @@ void uploadOWM() {
   String url = "http://api.openweathermap.org/data/3.0/stations?appid=";
   url += keyOWM;
 
-  String req = "{";
+  String req = "[{";
   req += "\"station_id\": \"";
   req += idOWM;
   req += "\", \"temperature\": ";
@@ -620,7 +620,7 @@ void uploadOWM() {
   req += ", \"pressure\": ";
   req += press_hpa;
   req += ", \"dew_point\": ";
-  req += dewptf;
+  req += dewptc;
 #ifdef WNW_SENS
   req += ", \"rain_1h\": ";
   req += rain_1h;
@@ -631,7 +631,7 @@ void uploadOWM() {
   req += ", \"wind_deg\": ";
   req += wind_dir;
 #endif
-  req += "}";
+  req += "}]";
 
   Serial.print(F("Request Data: "));
   Serial.println(req);
