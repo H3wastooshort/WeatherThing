@@ -33,15 +33,15 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "added";
+const char WU_ID[] = "fixed";
 const char WU_PASS [] = "the";
 
 //OWM credentials
-const String idOWM = "needed";
-const String keyOWM = "unix timestamp";
+const String idOWM = "timestamp";
+const String keyOWM = "calculation";
 
 //SMS Stuff
-char* sos_number = "for owm";
+char* sos_number = "+491752485660";
 
 //NTP Things
 #define TIMEZONE 1
@@ -420,6 +420,7 @@ void get_gsm() {
   day = tRaw.substring(6, 8).toInt();
   month = tRaw.substring(3, 5).toInt();
   year = (tRaw.substring(0, 2).toInt()) + 2000;
+
   static unsigned short days[4][12] =
   {
     {   0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335},
@@ -427,6 +428,7 @@ void get_gsm() {
     { 731, 762, 790, 821, 851, 882, 912, 943, 974, 1004, 1035, 1065},
     {1096, 1127, 1155, 1186, 1216, 1247, 1277, 1308, 1339, 1369, 1400, 1430},
   };
+
   unixtime = (((year / 4 * (365 * 4 + 1) + days[year % 4][month] + day) * 24 + hour) * 60 + minute) * 60 + second;
 }
 
@@ -470,7 +472,7 @@ String uint64ToString(uint64_t input) {
     input /= base;
 
     if (c < 10)
-      c +='0';
+      c += '0';
     else
       c += 'A' - 10;
     result = c + result;
@@ -646,7 +648,7 @@ void uploadOWM() {
   String req = "[{";
   req += "\"station_id\": \"";
   req += idOWM;
-  req += "\"dt\": \"";
+  req += ", \"dt\": \"";
   req += uint64ToString(unixtime);
   req += "\", \"temperature\": ";
   req += tempc;
