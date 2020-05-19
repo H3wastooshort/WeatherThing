@@ -33,15 +33,15 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "fixed";
-const char WU_PASS [] = "the";
+const char WU_ID[] = "WHY";
+const char WU_PASS [] = "ISN'T";
 
 //OWM credentials
-const String idOWM = "timestamp";
-const String keyOWM = "calculation";
+const String idOWM = "THIS";
+const String keyOWM = "WORKING";
 
 //SMS Stuff
-char* sos_number = "+491752485660";
+char* sos_number = "666";
 
 //NTP Things
 #define TIMEZONE 1
@@ -420,7 +420,7 @@ void get_gsm() {
   day = tRaw.substring(6, 8).toInt();
   month = tRaw.substring(3, 5).toInt();
   year = (tRaw.substring(0, 2).toInt()) + 2000;
-
+  
   static unsigned short days[4][12] =
   {
     {   0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335},
@@ -461,23 +461,6 @@ void get_sensors() {
   Serial.println(F(""));
   Serial.println(F("Done."));
   Serial.println(F(""));
-}
-
-String uint64ToString(uint64_t input) {
-  String result = "";
-  uint8_t base = 10;
-
-  do {
-    char c = input % base;
-    input /= base;
-
-    if (c < 10)
-      c += '0';
-    else
-      c += 'A' - 10;
-    result = c + result;
-  } while (input);
-  return result;
 }
 
 //print values
@@ -597,6 +580,25 @@ void calc_avgs() {
   }
 
 }
+
+//does what its name says
+String uint64ToString(uint64_t input) {
+  String result = "";
+  uint8_t base = 10;
+
+  do {
+    char c = input % base;
+    input /= base;
+
+    if (c < 10)
+      c +='0';
+    else
+      c += 'A' - 10;
+    result = c + result;
+  } while (input);
+  return result;
+}
+
 //Upload to PWS Networks
 
 void uploadWU() {
@@ -648,9 +650,9 @@ void uploadOWM() {
   String req = "[{";
   req += "\"station_id\": \"";
   req += idOWM;
-  req += ", \"dt\": \"";
+  req += "\", \"dt\": ";
   req += uint64ToString(unixtime);
-  req += "\", \"temperature\": ";
+  req += ", \"temperature\": ";
   req += tempc;
   req += ", \"humidity\": ";
   req += humidity;
