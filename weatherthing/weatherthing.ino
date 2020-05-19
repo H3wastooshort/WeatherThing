@@ -33,15 +33,15 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "oops";
-const char WU_PASS [] = "i used";
+const char WU_ID[] = "added";
+const char WU_PASS [] = "the";
 
 //OWM credentials
-const String idOWM = "the wrong";
-const String keyOWM = "url";
+const String idOWM = "needed";
+const String keyOWM = "unix timestamp";
 
 //SMS Stuff
-char* sos_number = "1234567890";
+char* sos_number = "for owm";
 
 //NTP Things
 #define TIMEZONE 1
@@ -100,9 +100,6 @@ float rain_day    = 0;
 uint16_t rainHour[60];
 uint8_t wind2min[8];
 int dir2min[8];
-int8_t second   = 0;
-int8_t minute   = 0;
-int8_t hour     = 0;
 int raintime    = 0;
 int rainlast    = 0;
 uint16_t lastWindCheck = 0;
@@ -110,6 +107,14 @@ uint8_t windClicks = 0;
 uint8_t avg_index = 0;
 
 int8_t gsmsigp = 100;
+
+int8_t second = 0;
+int8_t minute = 0;
+int8_t hour   = 0;
+int8_t day    = 0;
+int8_t month  = 0;
+int8_t year   = 0;
+uint64_t unixtime = 0;
 
 bool noerrors = true;
 bool nogsmerr = true;
@@ -269,9 +274,9 @@ void init_all() {
   lcd.print(F("."));
   init_gsm();
   lcd.print(F(". "));
-  
+
   //noerrors=true; //Ignore all errors and carry on
-  
+
   if (!noerrors) {
     Serial.println(F("!! OH SHIT! Something went wrong! !!"));
 
@@ -412,6 +417,17 @@ void get_gsm() {
   hour = tRaw.substring(9, 11).toInt();
   minute = tRaw.substring(12, 14).toInt();
   second = tRaw.substring(15, 15).toInt();
+  day = tRaw.substring(6, 8).toInt();
+  month = tRaw.substring(3, 5).toInt();
+  year = (tRaw.substring(0, 2).toInt()) + 2000;
+  static unsigned short days[4][12] =
+  {
+    {   0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335},
+    { 366, 397, 425, 456, 486, 517, 547, 578, 609, 639, 670, 700},
+    { 731, 762, 790, 821, 851, 882, 912, 943, 974, 1004, 1035, 1065},
+    {1096, 1127, 1155, 1186, 1216, 1247, 1277, 1308, 1339, 1369, 1400, 1430},
+  };
+  unixtime = (((year / 4 * (365 * 4 + 1) + days[year % 4][month] + day) * 24 + hour) * 60 + minute) * 60 + second;
 }
 
 void get_sensors() {
@@ -443,6 +459,23 @@ void get_sensors() {
   Serial.println(F(""));
   Serial.println(F("Done."));
   Serial.println(F(""));
+}
+
+String uint64ToString(uint64_t input) {
+  String result = "";
+  uint8_t base = 10;
+
+  do {
+    char c = input % base;
+    input /= base;
+
+    if (c < 10)
+      c +='0';
+    else
+      c += 'A' - 10;
+    result = c + result;
+  } while (input);
+  return result;
 }
 
 //print values
@@ -613,6 +646,8 @@ void uploadOWM() {
   String req = "[{";
   req += "\"station_id\": \"";
   req += idOWM;
+  req += "\"dt\": \"";
+  req += uint64ToString(unixtime);
   req += "\", \"temperature\": ";
   req += tempc;
   req += ", \"humidity\": ";
