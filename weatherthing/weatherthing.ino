@@ -33,15 +33,15 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "it";
-const char WU_PASS [] = "finally";
+const char WU_ID[] = "false";
+const char WU_PASS [] = "alarm";
 
 //OWM credentials
-const String idOWM = "works";
-const String keyOWM = "YES";
+const String idOWM = "the linux timestamp";
+const String keyOWM = "still is broken";
 
 //SMS Stuff
-char* sos_number = "42";
+char* sos_number = "+00000000000";
 
 //NTP Things
 #define TIMEZONE 1
@@ -414,22 +414,15 @@ void get_gsm() {
   gsmsigp = map(gsm.signalQuality(), 0, 31, 0, 100);
   //ntp.get(x, x, x, hour, minute, second);
   String tRaw = ntp.getRaw();
-  hour = tRaw.substring(9, 11).toInt();
-  minute = tRaw.substring(12, 14).toInt();
-  second = tRaw.substring(15, 15).toInt();
-  day = tRaw.substring(6, 8).toInt();
-  month = tRaw.substring(3, 5).toInt();
-  year = (tRaw.substring(0, 2).toInt());
-  
-  static unsigned short days[4][12] =
-  {
-    {   0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335},
-    { 366, 397, 425, 456, 486, 517, 547, 578, 609, 639, 670, 700},
-    { 731, 762, 790, 821, 851, 882, 912, 943, 974, 1004, 1035, 1065},
-    {1096, 1127, 1155, 1186, 1216, 1247, 1277, 1308, 1339, 1369, 1400, 1430},
-  };
+  hour = tRaw.substring(9, 11).toInt(); // 0-23
+  minute = tRaw.substring(12, 14).toInt(); // 0-59
+  second = tRaw.substring(15, 15).toInt(); // 0-59
+  day = tRaw.substring(6, 8).toInt() - 1; // 0-30
+  month = tRaw.substring(3, 5).toInt() - 1; // 0-11
+  year = (tRaw.substring(0, 2).toInt()); // 0-99
 
-  unixtime = (((year / 4 * (365 * 4 + 1) + days[year % 4][month] + day) * 24 + hour) * 60 + minute) * 60 + second;
+  static unsigned short days[] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+  unixtime = ((((year * 365 + year / 4) + days[month - 1] + day) * 24 + hour) * 60 + minute) * 60 + second;
 }
 
 void get_sensors() {
@@ -504,6 +497,8 @@ void print_sensors() {
   Serial.println(rain_day);
   Serial.println(F("GSM Signal %:"));
   Serial.println(gsmsigp);
+  Serial.println(F("UNIX Timestamp:"));
+  Serial.println(uint64ToString(unixtime));
   Serial.println(F(""));
 }
 
@@ -591,7 +586,7 @@ String uint64ToString(uint64_t input) {
     input /= base;
 
     if (c < 10)
-      c +='0';
+      c += '0';
     else
       c += 'A' - 10;
     result = c + result;
