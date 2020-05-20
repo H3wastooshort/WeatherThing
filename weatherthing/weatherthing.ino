@@ -35,15 +35,15 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "sth";
-const char WU_PASS [] = "is";
+const char WU_ID[] = "ok";
+const char WU_PASS [] = "SOMEHOW";
 
 //OWM credentials
-const String idOWM = "still";
-const String keyOWM = "broken";
+const String idOWM = "ITS FIXED";
+const String keyOWM = "now";
 
 //SMS Stuff
-char* sos_number = "+491752485660";
+char* sos_number = "+777";
 
 //NTP Things
 #define TIMEZONE 1
@@ -424,7 +424,7 @@ void get_gsm() {
   day = tRaw.substring(6, 8).toInt(); // 1-31
   month = tRaw.substring(3, 5).toInt(); // 1-24
   year = (tRaw.substring(0, 2).toInt()) + 2000; // 2000-2099
-  t.tm_year = year - 1900; // Year - 1900
+  t.tm_year = year - 1900 + 30; // Year - 1900
   t.tm_mon = month-1;           // Month, where 0 = jan
   t.tm_mday = day;          // Day of the month
   t.tm_hour = hour;
