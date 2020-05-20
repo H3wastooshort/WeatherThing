@@ -35,15 +35,15 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "why dind't";
-const char WU_PASS [] = "i use";
+const char WU_ID[] = "variable";
+const char WU_PASS [] = "types";
 
 //OWM credentials
-const String idOWM = "time.h";
-const String keyOWM = "before?";
+const String idOWM = "got";
+const String keyOWM = "fixed";
 
 //SMS Stuff
-char* sos_number = "+491752485660";
+char* sos_number = "+1234567890";
 
 //NTP Things
 #define TIMEZONE 1
@@ -110,12 +110,12 @@ uint8_t avg_index = 0;
 
 int8_t gsmsigp = 100;
 
-int8_t second = 0;
-int8_t minute = 0;
-int8_t hour   = 0;
-int8_t day    = 0;
-int8_t month  = 0;
-int8_t year   = 0;
+uint8_t second = 0;
+uint8_t minute = 0;
+uint8_t hour   = 0;
+uint8_t day    = 0;
+uint8_t month  = 0;
+uint16_t year   = 0;
 struct tm t;
 time_t t_of_day;
 uint64_t unixtime = 0;
@@ -420,7 +420,7 @@ void get_gsm() {
   String tRaw = ntp.getRaw();
   hour = tRaw.substring(9, 11).toInt(); // 0-23
   minute = tRaw.substring(12, 14).toInt(); // 0-59
-  second = tRaw.substring(15, 15).toInt(); // 0-59
+  second = tRaw.substring(15, 17).toInt(); // 0-59
   day = tRaw.substring(6, 8).toInt(); // 1-31
   month = tRaw.substring(3, 5).toInt(); // 1-24
   year = (tRaw.substring(0, 2).toInt()) + 2000; // 2000-2099
