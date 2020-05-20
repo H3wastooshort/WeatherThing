@@ -35,15 +35,15 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "variable";
-const char WU_PASS [] = "types";
+const char WU_ID[] = "sth";
+const char WU_PASS [] = "is";
 
 //OWM credentials
-const String idOWM = "got";
-const String keyOWM = "fixed";
+const String idOWM = "still";
+const String keyOWM = "broken";
 
 //SMS Stuff
-char* sos_number = "+1234567890";
+char* sos_number = "+491752485660";
 
 //NTP Things
 #define TIMEZONE 1
@@ -118,7 +118,7 @@ uint8_t month  = 0;
 uint16_t year   = 0;
 struct tm t;
 time_t t_of_day;
-uint64_t unixtime = 0;
+
 
 bool noerrors = true;
 bool nogsmerr = true;
@@ -432,8 +432,6 @@ void get_gsm() {
   t.tm_sec = second;
   t.tm_isdst = 0;        // Is DST on? 1 = yes, 0 = no, -1 = unknown
   t_of_day = mktime(&t);
-  unixtime = (uint64_t) t_of_day;
-
 }
 
 void get_sensors() {
@@ -522,7 +520,7 @@ void print_sensors() {
   Serial.print(F("Year: "));
   Serial.println(year);
   Serial.println(F("UNIX Timestamp:"));
-  Serial.println(uint64ToString(unixtime));
+  Serial.println(uint64ToString((uint64_t)t_of_day));
   Serial.println(F(""));
 }
 
@@ -670,7 +668,7 @@ void uploadOWM() {
   req += "\"station_id\": \"";
   req += idOWM;
   req += "\", \"dt\": ";
-  req += uint64ToString(unixtime);
+  req += uint64ToString((uint64_t)t_of_day);
   req += ", \"temperature\": ";
   req += tempc;
   req += ", \"humidity\": ";
