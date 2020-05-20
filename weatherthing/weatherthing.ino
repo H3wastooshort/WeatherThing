@@ -35,15 +35,15 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "millis()";
-const char WU_PASS [] = "would overflow";
+const char WU_ID[] = "more";
+const char WU_PASS [] = "elegant";
 
 //OWM credentials
-const String idOWM = "after";
-const String keyOWM = "50 days";
+const String idOWM = "millis rollover";
+const String keyOWM = "fix";
 
 //SMS Stuff
-char* sos_number = "+5050505050";
+char* sos_number = "+1234567890";
 
 //NTP Things
 #define TIMEZONE 1
@@ -558,7 +558,7 @@ uint16_t avginterval = 15000;
 unsigned long timenow_avg = 0;
 
 void calc_avgs() {
-  if (millis() >= (uint32_t)(timenow_avg + avginterval)) {
+  if ((unsigned long)(millis() - timenow_avg) > avginterval) {
     timenow_avg = millis();
     avg_index += 1;
     if (avg_index >= 8) {
@@ -616,16 +616,6 @@ String uint64ToString(uint64_t input) {
   return result;
 }
 
-//Solves... Problems...
-
-void solve_problems() {
-  if (millis() <= 60000){
-    Serial.println(F("Uh oh... seems like millis() overflowed"));
-    timenow_upload = 0;
-    timenow_avg = 0;
-    Serial.println(F("No worries. The timer variables have been reset."));
-  }
-}
 
 //Upload to PWS Networks
 
@@ -749,7 +739,7 @@ void loop() {
   print_lcd();
   solve_problems();
 
-  if ((uint32_t)(millis() - timenow_upload) >= uploadinterval) {
+  if ((unsigned long)(millis() - timenow_upload) > uploadinterval) {
     timenow_upload = millis();
     digitalWrite(13, HIGH);
     lcd.setCursor(0, 3);
