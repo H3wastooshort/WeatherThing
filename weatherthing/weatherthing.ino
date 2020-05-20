@@ -35,15 +35,15 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "ok";
-const char WU_PASS [] = "SOMEHOW";
+const char WU_ID[] = "millis()";
+const char WU_PASS [] = "would overflow";
 
 //OWM credentials
-const String idOWM = "ITS FIXED";
-const String keyOWM = "now";
+const String idOWM = "after";
+const String keyOWM = "50 days";
 
 //SMS Stuff
-char* sos_number = "+777";
+char* sos_number = "+5050505050";
 
 //NTP Things
 #define TIMEZONE 1
@@ -102,10 +102,10 @@ float rain_day    = 0;
 uint16_t rainHour[60];
 uint8_t wind2min[8];
 int dir2min[8];
-int raintime    = 0;
-int rainlast    = 0;
-uint16_t lastWindCheck = 0;
-uint8_t windClicks = 0;
+uint32_t raintime    = 0;
+uint32_t rainlast    = 0;
+uint32_t lastWindCheck = 0;
+uint16_t windClicks = 0;
 uint8_t avg_index = 0;
 
 int8_t gsmsigp = 100;
@@ -136,7 +136,7 @@ void wind_cnt() {
 
 void rain_cnt() {
   raintime = millis();
-  int raininterval = raintime - rainlast;
+  uint32_t raininterval = raintime - rainlast;
   if (raininterval > 10) {
     rain_day += IN_PER_BCKT * 100;
     rainHour[minute] += IN_PER_BCKT * 100;
@@ -550,7 +550,7 @@ void print_lcd() {
   lcd.print(gsmsigp);
   lcd.print(F("% "));
   lcd.print(F("ULT: "));
-  lcd.print(millis() - timenow_upload);
+  lcd.print((uint32_t)(millis() - timenow_upload));
 }
 
 //Calculate all of the averages
@@ -558,7 +558,7 @@ uint16_t avginterval = 15000;
 unsigned long timenow_avg = 0;
 
 void calc_avgs() {
-  if (millis() >= timenow_avg + avginterval) {
+  if (millis() >= (uint32_t)(timenow_avg + avginterval)) {
     timenow_avg = millis();
     avg_index += 1;
     if (avg_index >= 8) {
@@ -614,6 +614,17 @@ String uint64ToString(uint64_t input) {
     result = c + result;
   } while (input);
   return result;
+}
+
+//Solves... Problems...
+
+void solve_problems() {
+  if (millis() <= 60000){
+    Serial.println(F("Uh oh... seems like millis() overflowed"));
+    timenow_upload = 0;
+    timenow_avg = 0;
+    Serial.println(F("No worries. The timer variables have been reset."));
+  }
 }
 
 //Upload to PWS Networks
@@ -736,8 +747,9 @@ void loop() {
   calc_avgs();
   print_sensors();
   print_lcd();
+  solve_problems();
 
-  if (millis() - timenow_upload >= uploadinterval) {
+  if ((uint32_t)(millis() - timenow_upload) >= uploadinterval) {
     timenow_upload = millis();
     digitalWrite(13, HIGH);
     lcd.setCursor(0, 3);
