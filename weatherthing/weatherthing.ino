@@ -8,6 +8,8 @@
 
 #include <GSMSimTime.h>
 
+#include <time.h>
+
 #include <Wire.h>
 
 #include <OneWire.h>
@@ -33,15 +35,15 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "";
-const char WU_PASS [] = "";
+const char WU_ID[] = "why dind't";
+const char WU_PASS [] = "i use";
 
 //OWM credentials
-const String idOWM = "";
-const String keyOWM = "";
+const String idOWM = "time.h";
+const String keyOWM = "before?";
 
 //SMS Stuff
-char* sos_number = "";
+char* sos_number = "+491752485660";
 
 //NTP Things
 #define TIMEZONE 1
@@ -114,6 +116,8 @@ int8_t hour   = 0;
 int8_t day    = 0;
 int8_t month  = 0;
 int8_t year   = 0;
+struct tm t;
+time_t t_of_day;
 uint64_t unixtime = 0;
 
 bool noerrors = true;
@@ -417,12 +421,19 @@ void get_gsm() {
   hour = tRaw.substring(9, 11).toInt(); // 0-23
   minute = tRaw.substring(12, 14).toInt(); // 0-59
   second = tRaw.substring(15, 15).toInt(); // 0-59
-  day = tRaw.substring(6, 8).toInt(); // 0-31
-  month = tRaw.substring(3, 5).toInt(); // 1-12
-  year = (tRaw.substring(0, 2).toInt()); // 0-99
+  day = tRaw.substring(6, 8).toInt(); // 1-31
+  month = tRaw.substring(3, 5).toInt(); // 1-24
+  year = (tRaw.substring(0, 2).toInt()) + 2000; // 2000-2099
+  t.tm_year = year - 1900; // Year - 1900
+  t.tm_mon = month-1;           // Month, where 0 = jan
+  t.tm_mday = day;          // Day of the month
+  t.tm_hour = hour;
+  t.tm_min = minute;
+  t.tm_sec = second;
+  t.tm_isdst = 0;        // Is DST on? 1 = yes, 0 = no, -1 = unknown
+  t_of_day = mktime(&t);
+  unixtime = (uint64_t) t_of_day;
 
-  static unsigned short days[] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
-  unixtime = (((((uint32_t)year * 365UL + (uint32_t)year / 4UL) + days[(uint32_t)month - 1UL] + (uint32_t)day) * 24UL + (uint32_t)hour) * 60UL + (uint32_t)minute) * 60UL + (uint32_t)second;
 }
 
 void get_sensors() {
@@ -497,6 +508,19 @@ void print_sensors() {
   Serial.println(rain_day);
   Serial.println(F("GSM Signal %:"));
   Serial.println(gsmsigp);
+  Serial.println(F("Time:"));
+  Serial.print(F("Hour: "));
+  Serial.println(hour);
+  Serial.print(F("Minute: "));
+  Serial.println(minute);
+  Serial.print(F("Second: "));
+  Serial.println(second);
+  Serial.print(F("Day: "));
+  Serial.println(day);
+  Serial.print(F("Month: "));
+  Serial.println(month);
+  Serial.print(F("Year: "));
+  Serial.println(year);
   Serial.println(F("UNIX Timestamp:"));
   Serial.println(uint64ToString(unixtime));
   Serial.println(F(""));
