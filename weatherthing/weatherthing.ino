@@ -35,15 +35,15 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "more";
-const char WU_PASS [] = "elegant";
+const char WU_ID[] = "well";
+const char WU_PASS [] = "this";
 
 //OWM credentials
-const String idOWM = "millis rollover";
-const String keyOWM = "fix";
+const String idOWM = "was";
+const String keyOWM = "ironic";
 
 //SMS Stuff
-char* sos_number = "+1234567890";
+char* sos_number = "+00000000000";
 
 //NTP Things
 #define TIMEZONE 1
@@ -737,7 +737,6 @@ void loop() {
   calc_avgs();
   print_sensors();
   print_lcd();
-  solve_problems();
 
   if ((unsigned long)(millis() - timenow_upload) > uploadinterval) {
     timenow_upload = millis();
