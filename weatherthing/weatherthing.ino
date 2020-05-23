@@ -35,15 +35,15 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "well";
-const char WU_PASS [] = "this";
+const char WU_ID[] = "pretty";
+const char WU_PASS [] = "much";
 
 //OWM credentials
-const String idOWM = "was";
-const String keyOWM = "ironic";
+const String idOWM = "done";
+const String keyOWM = "now";
 
 //SMS Stuff
-char* sos_number = "+00000000000";
+char* sos_number = "+1234567890";
 
 //NTP Things
 #define TIMEZONE 1
@@ -89,7 +89,7 @@ float idtempc   = 0;
 float idtempf   = 0;
 float idhumid   = 0;
 
-int8_t uv_index = 0;
+float uv_index = 0;
 float vis = 0;
 float ir = 0;
 
@@ -355,6 +355,7 @@ void get_bme280() {
 void get_si1145 () {
   Serial.println(F("Getting SI1145."));
   uv_index = uv.readUV();
+  uv_index /= 100.0; 
   ir = uv.readIR();
   vis = uv.readVisible();
 }
@@ -362,6 +363,7 @@ void get_si1145 () {
 void get_ds18b20() {
   Serial.println(F("Getting DS18B20."));
   ds.requestTemperatures();
+  delay(1000);
   soiltempc = ds.getTempC(insideThermometer);
   soiltempf = DallasTemperature::toFahrenheit(soiltempc);
 }
@@ -635,6 +637,8 @@ void uploadWU() {
   req += dewptf;
   req += "&humidity=";
   req += humidity;
+  req += "&UV=";
+  req += uv_index;
   req += "&baromin=";
   req += press_in;
   req += "&soiltempf=";
