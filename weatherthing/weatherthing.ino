@@ -35,12 +35,12 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "pretty";
-const char WU_PASS [] = "much";
+const char WU_ID[] = "more";
+const char WU_PASS [] = "stable";
 
 //OWM credentials
-const String idOWM = "done";
-const String keyOWM = "now";
+const String idOWM = "now";
+const String keyOWM = "yay";
 
 //SMS Stuff
 char* sos_number = "+1234567890";
@@ -303,10 +303,15 @@ void init_all() {
 
 //reconnecting and disconnecting gprs
 void connect_gprs() {
+  uint8_t dontCrashOnMe = 0;
   Serial.print(F("Connecting Network"));
   while (!gsm.isRegistered()) {
     Serial.print(F("."));
     delay(500);
+    dontCrashOnMe++;
+    if (dontCrashOnMe >= 100) {
+      return;
+    }
   }
   delay(50);
   Serial.println(F(""));
@@ -314,10 +319,16 @@ void connect_gprs() {
   Serial.println(gsm.operatorName());
   Serial.println(F(""));
   delay(50);
+  dontCrashOnMe = 0;
   Serial.println(F("Connecting GPRS"));
   gprs.connect();
   while (!gprs.isConnected()) {
     Serial.print(F("."));
+    delay(500);
+    dontCrashOnMe++;
+    if (dontCrashOnMe >= 100) {
+      return;
+    }
   }
   delay(50);
   Serial.println(F(""));
@@ -355,7 +366,7 @@ void get_bme280() {
 void get_si1145 () {
   Serial.println(F("Getting SI1145."));
   uv_index = uv.readUV();
-  uv_index /= 100.0; 
+  uv_index /= 100.0;
   ir = uv.readIR();
   vis = uv.readVisible();
 }
@@ -427,7 +438,7 @@ void get_gsm() {
   month = tRaw.substring(3, 5).toInt(); // 1-24
   year = (tRaw.substring(0, 2).toInt()) + 2000; // 2000-2099
   t.tm_year = year - 1900 + 30; // Year - 1900
-  t.tm_mon = month-1;           // Month, where 0 = jan
+  t.tm_mon = month - 1;         // Month, where 0 = jan
   t.tm_mday = day;          // Day of the month
   t.tm_hour = hour;
   t.tm_min = minute;
