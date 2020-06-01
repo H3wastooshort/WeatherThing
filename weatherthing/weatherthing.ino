@@ -26,6 +26,8 @@
 
 #include <LiquidCrystal.h>
 
+#include <avr/wdt.h>
+
 // APN data for Netzclub
 #define GPRS_APN       "pinternet.interkom.de" // replace your GPRS APN
 #define GPRS_LOGIN     ""    // replace with your GPRS login
@@ -35,15 +37,15 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "more";
-const char WU_PASS [] = "stable";
+const char WU_ID[] = "please";
+const char WU_PASS [] = "stop";
 
 //OWM credentials
-const String idOWM = "now";
-const String keyOWM = "yay";
+const String idOWM = "crashing";
+const String keyOWM = "";
 
 //SMS Stuff
-char* sos_number = "+1234567890";
+char* sos_number = "1234567890";
 
 //NTP Things
 #define TIMEZONE 1
@@ -321,15 +323,23 @@ void connect_gprs() {
   delay(50);
   dontCrashOnMe = 0;
   Serial.println(F("Connecting GPRS"));
-  gprs.connect();
-  while (!gprs.isConnected()) {
+  wdt_enable(WDTO_8S); //Enable Watchdog
+  gprs.connect(); //Connect Command
+  wdt_reset(); //Reset Watchdog
+  while (!gprs.isConnected()) { //Wait for connection.
     Serial.print(F("."));
-    delay(500);
-    dontCrashOnMe++;
+    wdt_reset(); //Reset Watchdog
+    delay(420);
+    dontCrashOnMe++; //Increment Trial counter.
     if (dontCrashOnMe >= 100) {
-      return;
+      wdt_reset(); //Reset Watchdog
+      gprs.connect(); //Try connecting again
+    }
+    if (dontCrashOnMe >= 200) {
+      while(true){} //Give up and wait for Watchdog to reset the Arduino
     }
   }
+  wdt_disable();
   delay(50);
   Serial.println(F(""));
   Serial.print(F("Connected!\nIP:"));
@@ -360,13 +370,13 @@ void get_bme280() {
   dewptc = (tempc - (100 - humidity) / 5);
   dewptf = (dewptc * 9 / 5) + 32;
   press_hpa = bme.readPressure() / 100.0F;
-  press_in = press_hpa * 0.03;
+  press_in = press_hpa * 0.02953F;
 }
 
 void get_si1145 () {
   Serial.println(F("Getting SI1145."));
   uv_index = uv.readUV();
-  uv_index /= 100.0;
+  uv_index /= 100.0F;
   ir = uv.readIR();
   vis = uv.readVisible();
 }
