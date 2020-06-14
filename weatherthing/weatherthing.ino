@@ -37,12 +37,12 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "automatic";
-const char WU_PASS [] = "reboot";
+const char WU_ID[] = "better";
+const char WU_PASS [] = "error";
 
 //OWM credentials
-const String idOWM = "if ";
-const String keyOWM = "errored";
+const String idOWM = "output";
+const String keyOWM = "on lcd";
 
 //SMS Stuff
 char* sos_number = "1234567890";
@@ -152,11 +152,13 @@ void rain_cnt() {
 void init_bme280() {
   Serial.println(F("Init: BME280"));
   if (bme.begin(0x76)) {
+    lcd.print(F("."));
     Serial.println(F("OK"));
     Serial.println(F(""));
   }
   else {
     noerrors = false;
+    lcd.print(F("*"));
     Serial.println(F("ERROR"));
     Serial.println(F(""));
   }
@@ -165,11 +167,13 @@ void init_bme280() {
 void init_si1145 () {
   Serial.println(F("Init: SI1145"));
   if (uv.begin()) {
+    lcd.print(F("."));
     Serial.println(F("OK"));
     Serial.println(F(""));
   }
   else {
     noerrors = false;
+    lcd.print(F("*"));
     Serial.println(F("ERROR"));
     Serial.println(F(""));
   }
@@ -183,6 +187,7 @@ void init_ds18b20() {
   bool dsdev = ds.getAddress(insideThermometer, 0);
   if (!dsdev) {
     noerrors = false;
+    lcd.print(F("*"));
     Serial.println(F("ERROR"));
     Serial.println(F(""));
     return;
@@ -200,6 +205,7 @@ void init_ds18b20() {
   Serial.println();
 
   if (dsdev) {
+    lcd.print(F("."));
     Serial.println(F("OK"));
     Serial.println(F(""));
   }
@@ -211,11 +217,13 @@ void init_dht11() {
   float h = dht.readHumidity();
   float t = dht.readTemperature();
   if (!isnan(h) || !isnan(t)) {
+    lcd.print(F("."));
     Serial.println(F("OK"));
     Serial.println(F(""));
   }
   else {
     noerrors = false;
+    lcd.print(F("*"));
     Serial.println(F("ERROR"));
     Serial.println(F(""));
   }
@@ -232,6 +240,7 @@ void init_gsm() {
     Serial.println(F("No GSM/GPRS Module detected!"));
     noerrors = false;
     nogsmerr = false;
+    lcd.print(F("*"));
     Serial.println(F("ERROR"));
     Serial.println(F(""));
     return;
@@ -241,6 +250,7 @@ void init_gsm() {
     Serial.println(F("No SIM Card detected!"));
     noerrors = false;
     nogsmerr = false;
+    lcd.print(F("*"));
     Serial.println(F("ERROR"));
     Serial.println(F(""));
     return;
@@ -268,18 +278,20 @@ void init_gsm() {
 }
 
 void init_all() {
+  lcd.setCursor(0, 0);
+  lcd.print(F("    B  DG"));
+  lcd.setCursor(0, 1);
+  lcd.print(F("    MUDHS"));
+  lcd.setCursor(0, 2);
+  lcd.print(F("    EVSTM"));
   lcd.setCursor(0, 3);
   lcd.print(F("INIT"));
   init_bme280();
-  lcd.print(F("."));
   init_si1145();
-  lcd.print(F("."));
   init_ds18b20();
-  lcd.print(F("."));
   init_dht11();
-  lcd.print(F("."));
   init_gsm();
-  lcd.print(F(". "));
+  lcd.print(F(" "));
 
   //noerrors=true; //Ignore all errors and carry on
 
@@ -306,6 +318,8 @@ void init_all() {
   sms.send(sos_number, "Initialized without errors.");
   Serial.println(F("INIT OK"));
   lcd.print(F("OK"));
+  delay(500);
+  lcd.clear();
 }
 
 //reconnecting and disconnecting gprs
