@@ -37,12 +37,12 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "please";
-const char WU_PASS [] = "stop";
+const char WU_ID[] = "automatic";
+const char WU_PASS [] = "reboot";
 
 //OWM credentials
-const String idOWM = "crashing";
-const String keyOWM = "";
+const String idOWM = "if ";
+const String keyOWM = "errored";
 
 //SMS Stuff
 char* sos_number = "1234567890";
@@ -291,11 +291,16 @@ void init_all() {
       Serial.println(F("Reporting via SMS."));
       sms.send(sos_number, "Some sensors reported missing while initializing!");
     }
+    uint32_t reset_timenow = millis();
     while (true) {
+      if (reset_timenow - millis() > 900000){ //Wait 15 Mins
+        wdt_enable(WDTO_15MS); //reset via watchdog
+      }
       digitalWrite(53, HIGH);
       delay(100);
       digitalWrite(53, LOW);
       delay(100);
+      
     }
   }
   sms.send(sos_number, "Initialized without errors.");
@@ -305,25 +310,28 @@ void init_all() {
 
 //reconnecting and disconnecting gprs
 void connect_gprs() {
+  wdt_enable(WDTO_8S); //Enable Watchdog
   uint8_t dontCrashOnMe = 0;
   Serial.print(F("Connecting Network"));
   while (!gsm.isRegistered()) {
+    wdt_reset(); //Reset Watchdog
     Serial.print(F("."));
-    delay(500);
+    delay(420);
     dontCrashOnMe++;
     if (dontCrashOnMe >= 100) {
       return;
     }
   }
+  wdt_reset(); //Reset Watchdog
   delay(50);
   Serial.println(F(""));
   Serial.print(F("Connected to "));
   Serial.println(gsm.operatorName());
   Serial.println(F(""));
+  wdt_reset(); //Reset Watchdog
   delay(50);
   dontCrashOnMe = 0;
   Serial.println(F("Connecting GPRS"));
-  wdt_enable(WDTO_8S); //Enable Watchdog
   gprs.connect(); //Connect Command
   wdt_reset(); //Reset Watchdog
   while (!gprs.isConnected()) { //Wait for connection.
@@ -336,7 +344,7 @@ void connect_gprs() {
       gprs.connect(); //Try connecting again
     }
     if (dontCrashOnMe >= 200) {
-      while(true){} //Give up and wait for Watchdog to reset the Arduino
+      while (true) {} //Give up and wait for Watchdog to reset the Arduino
     }
   }
   wdt_disable();
@@ -775,9 +783,9 @@ void loop() {
     lcd.setCursor(0, 3);
     lcd.print(F("Uploading to OWM... "));
     uploadOWM();
-    disconnect_gprs();
     lcd.setCursor(0, 3);
     lcd.print(F("Disconnecting...    "));
+    disconnect_gprs();
     digitalWrite(13, LOW);
     delay(1000);
     lcd.setCursor(0, 3);
