@@ -38,14 +38,14 @@
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
 const char WU_ID[] = "better";
-const char WU_PASS [] = "error";
+const char WU_PASS [] = "sms";
 
 //OWM credentials
-const String idOWM = "output";
-const String keyOWM = "on lcd";
+const String idOWM = "error";
+const String keyOWM = "report";
 
 //SMS Stuff
-char* sos_number = "1234567890";
+char* sos_number = "123467890";
 
 //NTP Things
 #define TIMEZONE 1
@@ -124,6 +124,7 @@ time_t t_of_day;
 
 bool noerrors = true;
 bool nogsmerr = true;
+char smsreport = "Report:\n";
 
 unsigned long timenow_upload = 0;
 
@@ -153,12 +154,14 @@ void init_bme280() {
   Serial.println(F("Init: BME280"));
   if (bme.begin(0x76)) {
     lcd.print(F("."));
+    smsreport += "BME: OK\n";
     Serial.println(F("OK"));
     Serial.println(F(""));
   }
   else {
     noerrors = false;
     lcd.print(F("*"));
+    smsreport += "BME: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
   }
@@ -168,12 +171,14 @@ void init_si1145 () {
   Serial.println(F("Init: SI1145"));
   if (uv.begin()) {
     lcd.print(F("."));
+    smsreport += "UV: OK\n";
     Serial.println(F("OK"));
     Serial.println(F(""));
   }
   else {
     noerrors = false;
     lcd.print(F("*"));
+    smsreport += "UV: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
   }
@@ -188,6 +193,7 @@ void init_ds18b20() {
   if (!dsdev) {
     noerrors = false;
     lcd.print(F("*"));
+    smsreport += "DS: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
     return;
@@ -206,6 +212,7 @@ void init_ds18b20() {
 
   if (dsdev) {
     lcd.print(F("."));
+    smsreport += "DS: OK\n";
     Serial.println(F("OK"));
     Serial.println(F(""));
   }
@@ -218,12 +225,14 @@ void init_dht11() {
   float t = dht.readTemperature();
   if (!isnan(h) || !isnan(t)) {
     lcd.print(F("."));
+    smsreport += "DHT: OK\n";
     Serial.println(F("OK"));
     Serial.println(F(""));
   }
   else {
     noerrors = false;
     lcd.print(F("*"));
+    smsreport += "DHT: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
   }
@@ -241,6 +250,7 @@ void init_gsm() {
     noerrors = false;
     nogsmerr = false;
     lcd.print(F("*"));
+    smsreport += "GSM: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
     return;
@@ -250,7 +260,8 @@ void init_gsm() {
     Serial.println(F("No SIM Card detected!"));
     noerrors = false;
     nogsmerr = false;
-    lcd.print(F("*"));
+    lcd.print(F(","));
+    smsreport += "SIM: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
     return;
@@ -272,6 +283,8 @@ void init_gsm() {
   delay(100);
   connect_gprs();
   disconnect_gprs();
+  lcd.print(F("."));
+  smsreport += "GSM: OK\n";
   Serial.println(F("GSM OK"));
   Serial.println(F(""));
   digitalWrite(13, LOW);
@@ -279,11 +292,11 @@ void init_gsm() {
 
 void init_all() {
   lcd.setCursor(0, 0);
-  lcd.print(F("    B  DG"));
+  lcd.print(F("    B  DG   . = OK "));
   lcd.setCursor(0, 1);
-  lcd.print(F("    MUDHS"));
+  lcd.print(F("    MUDHS   , = ErrU"));
   lcd.setCursor(0, 2);
-  lcd.print(F("    EVSTM"));
+  lcd.print(F("    EVSTM   * = ErrP"));
   lcd.setCursor(0, 3);
   lcd.print(F("INIT"));
   init_bme280();
@@ -295,27 +308,26 @@ void init_all() {
 
   //noerrors=true; //Ignore all errors and carry on
 
+
   if (!noerrors) {
     Serial.println(F("!! OH SHIT! Something went wrong! !!"));
-
     lcd.print(F("ERROR"));
     if (nogsmerr) {
-      Serial.println(F("Reporting via SMS."));
-      sms.send(sos_number, "Some sensors reported missing while initializing!");
+      Serial.println(F("Sending SMS"));
+      sms.send(sos_number, smsreport);
     }
     uint32_t reset_timenow = millis();
     while (true) {
-      if (reset_timenow - millis() > 900000){ //Wait 15 Mins
+      if (reset_timenow - millis() > 900000) { //Wait 15 Mins
         wdt_enable(WDTO_15MS); //reset via watchdog
       }
       digitalWrite(53, HIGH);
       delay(100);
       digitalWrite(53, LOW);
       delay(100);
-      
+
     }
   }
-  sms.send(sos_number, "Initialized without errors.");
   Serial.println(F("INIT OK"));
   lcd.print(F("OK"));
   delay(500);
