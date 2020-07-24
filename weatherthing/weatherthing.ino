@@ -37,15 +37,21 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "better";
-const char WU_PASS [] = "sms";
+const char WU_ID[] = "WX ID";
+const char WU_PASS [] = "WX Password";
 
 //OWM credentials
-const String idOWM = "error";
-const String keyOWM = "report";
+const String idOWM = "OWM ID";
+const String keyOWM = "OWM API Key";
+
+//Stats Server
+const String statURL = "Status report intake URL";
 
 //SMS Stuff
-char* sos_number = "123467890";
+char* sos_number = "1234567890";
+
+//Voltage Devider
+#define VOLTAGE_AT_1V1 15 //Input voltage that results in 1.1 Volts at A3
 
 //NTP Things
 #define TIMEZONE 1
@@ -120,6 +126,8 @@ uint8_t month  = 0;
 uint16_t year   = 0;
 struct tm t;
 time_t t_of_day;
+
+float voltage = 12;
 
 
 bool noerrors = true;
@@ -470,6 +478,16 @@ void get_windspeed() {
 
 }
 
+void get_stats() {
+  analogReference(INTERNAL1V1);
+  delay(10);
+  int rawVolt = analogRead(A3);
+  float v1 = map(rawVolt, 0, 1024, 0, 1.1);
+  voltage = map(v1, 0, 1.1, 0, VOLTAGE_AT_1V1);
+  analogReference(DEFAULT);
+  delay(10);
+}
+
 void get_gsm() {
   Serial.println(F("Getting GSM."));
   gsmsigp = map(gsm.signalQuality(), 0, 31, 0, 100);
@@ -512,6 +530,9 @@ void get_sensors() {
   lcd.setCursor(0, 3);
   lcd.print(F("Getting Windspeed..."));
   get_windspeed();
+  lcd.setCursor(0, 3);
+  lcd.print(F("Getting Stats..."));
+  get_stats();
   lcd.setCursor(0, 3);
   lcd.print(F("Getting GSM&Time... "));
   get_gsm();
@@ -578,6 +599,8 @@ void print_sensors() {
   Serial.println(year);
   Serial.println(F("UNIX Timestamp:"));
   Serial.println(uint64ToString((uint64_t)t_of_day));
+  Serial.println(F("Voltage:"));
+  Serial.println(voltage);
   Serial.println(F(""));
 }
 
@@ -758,6 +781,19 @@ void uploadOWM() {
   Serial.println(resp);
 }
 
+void uploadStats() {
+  String url = statURL;
+  url += "?v=";
+  url += voltage;
+
+  Serial.print(F("Request: "));
+  Serial.println(url);
+  String resp = http.get(url, true);
+  Serial.print(F("Response: "));
+  Serial.println(resp);
+
+}
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -809,6 +845,9 @@ void loop() {
     lcd.setCursor(0, 3);
     lcd.print(F("Uploading to OWM... "));
     uploadOWM();
+    lcd.setCursor(0, 3);
+    lcd.print(F("Uploading Stats... "));
+    uploadStats();
     lcd.setCursor(0, 3);
     lcd.print(F("Disconnecting...    "));
     disconnect_gprs();
