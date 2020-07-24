@@ -37,18 +37,18 @@
 //WU Credentials
 const char serverWU[] = "weatherstation.wunderground.com";
 const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "WX ID";
-const char WU_PASS [] = "WX Password";
+const char WU_ID[] = "";
+const char WU_PASS [] = "";
 
 //OWM credentials
-const String idOWM = "OWM ID";
-const String keyOWM = "OWM API Key";
+const String idOWM = "";
+const String keyOWM = "";
 
 //Stats Server
-const String statURL = "Status report intake URL";
+const String statURL = "";
 
 //SMS Stuff
-char* sos_number = "1234567890";
+char* sos_number = "";
 
 //Voltage Devider
 #define VOLTAGE_AT_1V1 15 //Input voltage that results in 1.1 Volts at A3
@@ -482,8 +482,7 @@ void get_stats() {
   analogReference(INTERNAL1V1);
   delay(10);
   int rawVolt = analogRead(A3);
-  float v1 = map(rawVolt, 0, 1024, 0, 1.1);
-  voltage = map(v1, 0, 1.1, 0, VOLTAGE_AT_1V1);
+  float voltage = map(rawVolt, 0, 1024, 0, VOLTAGE_AT_1V1);
   analogReference(DEFAULT);
   delay(10);
 }
