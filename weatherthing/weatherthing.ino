@@ -482,7 +482,7 @@ void get_stats() {
   analogReference(INTERNAL1V1);
   delay(10);
   int rawVolt = analogRead(A3);
-  float voltage = map(rawVolt, 0, 1024, 0, (VOLTAGE_AT_1V1)*100);
+  voltage = map(rawVolt, 0, 1024, 0, (VOLTAGE_AT_1V1)*100);
   voltage = voltage/100;
   analogReference(DEFAULT);
   delay(10);
