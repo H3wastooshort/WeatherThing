@@ -51,7 +51,7 @@ const String statURL = "";
 char* sos_number = "";
 
 //Voltage Devider
-#define VOLTAGE_AT_1V1 15 //Input voltage that results in 1.1 Volts at A3
+#define VOLTAGE_AT_1V1 14.6 //Input voltage that results in 1.1 Volts at A3
 
 //NTP Things
 #define TIMEZONE 1
@@ -89,8 +89,8 @@ float tempc     = 0;
 float dewptc    = 0;
 float dewptf    = 0;
 float humidity  = 0;
-float press_hpa = 0;
-float press_in  = 0;
+double press_hpa = 0;
+double press_in  = 0;
 float soiltempf = 0;
 float soiltempc = 0;
 float idtempc   = 0;
@@ -132,6 +132,13 @@ float voltage = 12;
 
 bool noerrors = true;
 bool nogsmerr = true;
+
+bool hasBME = false;
+bool hasSI = false;
+bool hasDS = false;
+bool hasDHT = false;
+bool hasGSM = false;
+
 char smsreport = "Report:\n";
 
 unsigned long timenow_upload = 0;
@@ -165,6 +172,7 @@ void init_bme280() {
     smsreport += "BME: OK\n";
     Serial.println(F("OK"));
     Serial.println(F(""));
+    hasBME = true;
   }
   else {
     noerrors = false;
@@ -172,6 +180,7 @@ void init_bme280() {
     smsreport += "BME: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
+    hasBME = false;
   }
 }
 
@@ -182,6 +191,7 @@ void init_si1145 () {
     smsreport += "UV: OK\n";
     Serial.println(F("OK"));
     Serial.println(F(""));
+    hasSI = true;
   }
   else {
     noerrors = false;
@@ -189,6 +199,7 @@ void init_si1145 () {
     smsreport += "UV: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
+    hasSI = false;
   }
 }
 
@@ -204,6 +215,7 @@ void init_ds18b20() {
     smsreport += "DS: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
+    hasDS = false;
     return;
   }
   // report parasite power requirements
@@ -223,6 +235,7 @@ void init_ds18b20() {
     smsreport += "DS: OK\n";
     Serial.println(F("OK"));
     Serial.println(F(""));
+    hasDS = true;
   }
 }
 
@@ -236,6 +249,7 @@ void init_dht11() {
     smsreport += "DHT: OK\n";
     Serial.println(F("OK"));
     Serial.println(F(""));
+    hasDHT = true;
   }
   else {
     noerrors = false;
@@ -243,6 +257,7 @@ void init_dht11() {
     smsreport += "DHT: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
+    hasDHT = false;
   }
 }
 
@@ -261,6 +276,7 @@ void init_gsm() {
     smsreport += "GSM: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
+    hasGSM = false;
     return;
   }
   delay(50);
@@ -272,6 +288,7 @@ void init_gsm() {
     smsreport += "SIM: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
+    hasGSM = false;
     return;
   }
   delay(50);
@@ -296,6 +313,7 @@ void init_gsm() {
   Serial.println(F("GSM OK"));
   Serial.println(F(""));
   digitalWrite(13, LOW);
+  hasGSM = true;
 }
 
 void init_all() {
@@ -318,22 +336,24 @@ void init_all() {
 
 
   if (!noerrors) {
-    Serial.println(F("!! OH SHIT! Something went wrong! !!"));
+    Serial.println(F("Missing Sensors!"));
     lcd.print(F("ERROR"));
     if (nogsmerr) {
       Serial.println(F("Sending SMS"));
       sms.send(sos_number, smsreport);
     }
-    uint32_t reset_timenow = millis();
-    while (true) {
-      if (reset_timenow - millis() > 900000) { //Wait 15 Mins
-        wdt_enable(WDTO_15MS); //reset via watchdog
-      }
-      digitalWrite(53, HIGH);
-      delay(100);
-      digitalWrite(53, LOW);
-      delay(100);
+    else {
+      uint32_t reset_timenow = millis();
+      while (true) {
+        if (reset_timenow - millis() > 900000) { //Wait 15 Mins
+          wdt_enable(WDTO_15MS); //reset via watchdog
+        }
+        digitalWrite(53, HIGH);
+        delay(100);
+        digitalWrite(53, LOW);
+        delay(100);
 
+      }
     }
   }
   Serial.println(F("INIT OK"));
@@ -386,10 +406,8 @@ void connect_gprs() {
   Serial.println(F(""));
   Serial.print(F("Connected!\nIP:"));
   Serial.println(gprs.getIP());
-  delay(50);
   Serial.println(F("Getting Time"));
   ntp.syncFromServer();
-  delay(5000);
   Serial.print(F("DateTime: "));
   Serial.println(ntp.getRaw());
   Serial.println(F(""));
@@ -479,12 +497,11 @@ void get_windspeed() {
 }
 
 void get_stats() {
-  analogReference(INTERNAL1V1);
-  delay(10);
+  Serial.println(F("Getting Stats."));
   int rawVolt = analogRead(A3);
-  voltage = map(rawVolt, 0, 1024, 0, (VOLTAGE_AT_1V1)*100);
-  voltage = voltage/100;
-  analogReference(DEFAULT);
+  float v1 = map(rawVolt, 0, 1024, 0, (VOLTAGE_AT_1V1) * 100);
+  v1 = v1 / 100;
+  voltage = v1;
   delay(10);
 }
 
@@ -512,18 +529,26 @@ void get_gsm() {
 void get_sensors() {
   Serial.println(F("Getting Sensors."));
   Serial.println(F(""));
-  lcd.setCursor(0, 3);
-  lcd.print(F("Getting BME280...   "));
-  get_bme280();
-  lcd.setCursor(0, 3);
-  lcd.print(F("Getting SI1145...   "));
-  get_si1145();
-  lcd.setCursor(0, 3);
-  lcd.print(F("Getting DS18B20...  "));
-  get_ds18b20();
-  lcd.setCursor(0, 3);
-  lcd.print(F("Getting DHT11...    "));
-  get_dht11();
+  if (hasBME) {
+    lcd.setCursor(0, 3);
+    lcd.print(F("Getting BME280...   "));
+    get_bme280();
+  }
+  if (hasSI) {
+    lcd.setCursor(0, 3);
+    lcd.print(F("Getting SI1145...   "));
+    get_si1145();
+  }
+  if (hasDS) {
+    lcd.setCursor(0, 3);
+    lcd.print(F("Getting DS18B20...  "));
+    get_ds18b20();
+  }
+  if (hasDHT) {
+    lcd.setCursor(0, 3);
+    lcd.print(F("Getting DHT11...    "));
+    get_dht11();
+  }
   lcd.setCursor(0, 3);
   lcd.print(F("Getting Windvane... "));
   get_windvane();
@@ -534,8 +559,10 @@ void get_sensors() {
   lcd.print(F("Getting Stats..."));
   get_stats();
   lcd.setCursor(0, 3);
-  lcd.print(F("Getting GSM&Time... "));
-  get_gsm();
+  if (hasGSM) {
+    lcd.print(F("Getting GSM&Time... "));
+    get_gsm();
+  }
   lcd.setCursor(0, 3);
   lcd.print(F("        DONE        "));
   Serial.println(F(""));
@@ -607,24 +634,50 @@ void print_sensors() {
 void print_lcd() {
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print(F("T: "));
-  lcd.print(tempc);
-  lcd.print(F("C H: "));
-  lcd.print(humidity);
-  lcd.print(F("%"));
+  if (hasBME) {
+    lcd.print(F("T: "));
+    lcd.print(tempc);
+    lcd.print(F("C H: "));
+    lcd.print(humidity);
+    lcd.print(F("%"));
+  }
+  else {
+    lcd.print(F("No BME280!"));
+  }
   lcd.setCursor(0, 1);
-  lcd.print(F("S: "));
-  lcd.print((int)soiltempc);
-  lcd.print(F("C P: "));
-  lcd.print(press_hpa);
-  lcd.print(F("hPa"));
-  lcd.setCursor(0, 2);
-  lcd.print(F("I: "));
-  lcd.print((int)idtempc);
-  lcd.print(F("C "));
-  lcd.print((int)idhumid);
-  lcd.print(F("% UV: "));
+  if (hasDS) {
+    lcd.print(F("S: "));
+    lcd.print((int)soiltempc);
+    lcd.print(F("C"));
+  }
+  else {
+    lcd.print(F("No DS."));
+  }
+  if (hasBME) {
+    lcd.print(F(" P: "));
+    lcd.print(press_hpa);
+    lcd.print(F("hPa"));
+  }
+
+  if (hasDHT) {
+    lcd.setCursor(0, 2);
+    lcd.print(F("I: "));
+    lcd.print((int)idtempc);
+    lcd.print(F("C "));
+    lcd.print((int)idhumid);
+    lcd.print(F("%"));
+  }
+  else {
+    lcd.print(F("No DHT."));
+  }
+  if (hasSI) {
+  lcd.print(F(" UV: "));
   lcd.print(uv_index);
+  }
+  else {
+    lcd.print(F("No SI."));
+  }
+  
   lcd.setCursor(0, 3);
   lcd.print(F("GSM: "));
   lcd.print(gsmsigp);
@@ -709,22 +762,30 @@ void uploadWU() {
   req += "&PASSWORD=";
   req += WU_PASS;
   req += "&dateutc=now";
-  req += "&tempf=";
-  req += tempf;
-  req += "&dewptf=";
-  req += dewptf;
-  req += "&humidity=";
-  req += humidity;
-  req += "&UV=";
-  req += uv_index;
-  req += "&baromin=";
-  req += press_in;
-  req += "&soiltempf=";
-  req += soiltempf;
-  req += "&indoortempf=";
-  req += idtempf;
-  req += "&indoorhumidity=";
-  req += idhumid;
+  if (hasBME) {
+    req += "&tempf=";
+    req += tempf;
+    req += "&dewptf=";
+    req += dewptf;
+    req += "&humidity=";
+    req += humidity;
+    req += "&baromin=";
+    req += press_in;
+  }
+  if (hasSI) {
+    req += "&UV=";
+    req += uv_index;
+  }
+  if (hasDS) {
+    req += "&soiltempf=";
+    req += soiltempf;
+  }
+  if (hasDHT) {
+    req += "&indoortempf=";
+    req += idtempf;
+    req += "&indoorhumidity=";
+    req += idhumid;
+  }
 #ifdef WNW_SENS
   req += "&windspeedmph=";
   req += wind_mph;
@@ -752,14 +813,16 @@ void uploadOWM() {
   req += idOWM;
   req += "\", \"dt\": ";
   req += uint64ToString((uint64_t)t_of_day);
-  req += ", \"temperature\": ";
-  req += tempc;
-  req += ", \"humidity\": ";
-  req += humidity;
-  req += ", \"pressure\": ";
-  req += press_hpa;
-  req += ", \"dew_point\": ";
-  req += dewptc;
+  if (hasBME) {
+    req += ", \"temperature\": ";
+    req += tempc;
+    req += ", \"humidity\": ";
+    req += humidity;
+    req += ", \"pressure\": ";
+    req += press_hpa;
+    req += ", \"dew_point\": ";
+    req += dewptc;
+  }
 #ifdef WNW_SENS
   req += ", \"rain_1h\": ";
   req += rain_1h;
@@ -804,6 +867,7 @@ void setup() {
   pinMode(53, OUTPUT);
   pinMode(52, OUTPUT);
   pinMode(41, OUTPUT);
+  analogReference(INTERNAL1V1);
   digitalWrite(41, LOW);
   attachInterrupt(0 , wind_cnt, FALLING);
   attachInterrupt(1 , rain_cnt, FALLING);
