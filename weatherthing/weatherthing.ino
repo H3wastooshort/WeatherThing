@@ -64,11 +64,11 @@ uint32_t uploadinterval = 300000;
 
 //Library defines
 
-GSMSim gsm(Serial1, RESET_PIN);
-GSMSimGPRS gprs(Serial1, RESET_PIN);
-GSMSimHTTP http(Serial1, RESET_PIN);
-GSMSimSMS sms(Serial1, RESET_PIN);
-GSMSimTime ntp(Serial1, RESET_PIN);
+GSMSim gsm(Serial1, RESET_PIN, 52, true);
+GSMSimGPRS gprs(Serial1, RESET_PIN, 52, true);
+GSMSimHTTP http(Serial1, RESET_PIN, 52, true);
+GSMSimSMS sms(Serial1, RESET_PIN, 52, true);
+GSMSimTime ntp(Serial1, RESET_PIN, 52, true);
 
 Adafruit_BME280 bme;
 Adafruit_SI1145 uv = Adafruit_SI1145();
@@ -263,6 +263,7 @@ void init_dht11() {
 
 void init_gsm() {
   Serial.println(F("Init: GSM"));
+  gsm.reset();
   gsm.init();
   sms.initSMS();
   http.init();
@@ -424,7 +425,7 @@ void disconnect_gprs() {
 
 void get_bme280() {
   Serial.println(F("Getting BME280."));
-  tempc = bme.readTemperature();
+  tempc = bme.readTemperature() - 1.5F; //Compensating for heat produced by sensor
   tempf = (int)round(1.8 * tempc + 32);
   humidity = bme.readHumidity();
   dewptc = (tempc - (100 - humidity) / 5);
