@@ -1,8 +1,10 @@
 <?php
-$filename = "data.csv";
-$file = fopen($filename,"w");
-$content = "unixtime,voltage\n";
 header("Content-Type: text/plain");
+$filename = "data.csv";
+$content = "unixtime,voltage\n";
+$backupname = "data-backup-" . time() . ".csv";
+copy($filename, $backupname);
+$file = fopen($filename,"w");
 fwrite($file, $content);
 fclose($file);
 print("Data Reset.");
