@@ -426,7 +426,7 @@ void disconnect_gprs() {
 void get_bme280() {
   Serial.println(F("Getting BME280."));
   tempc = bme.readTemperature() - 1.5F; //Compensating for heat produced by sensor
-  tempf = (1.8 * tempc + 32);
+  tempf = (tempc * 9 / 5) + 32;
   humidity = bme.readHumidity();
   dewptc = (tempc - (100 - humidity) / 5);
   dewptf = (dewptc * 9 / 5) + 32;
