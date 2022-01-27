@@ -40,9 +40,9 @@ while (($col = fgetcsv($file, 100, ",")) !== FALSE) {
 }
 fclose($file);
 
-print("\n<!--\n");
+/*print("\n<!--\n");
 var_dump($data);
-print("\n-->\n");
+print("\n-->\n");*/
 
 
 //c++ style map()
