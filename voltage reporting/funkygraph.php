@@ -51,7 +51,7 @@ function mapfloat(float $x, float $in_min, float $in_max, float $out_min, float 
 }
 
 foreach ($data as $point) {
-	$pos =  max(0, min(100, mapfloat(floatval($point[1]), 10.4, 14.6, 0, 100)));
+	$pos =  max(0, min(100, mapfloat(floatval($point[1]), 10.4, 14.6, 100, 0)));
 	print("<div><span style=\"top: $pos%\">•</span></div>");
 }
 ?>
