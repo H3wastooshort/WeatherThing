@@ -12,6 +12,7 @@
 <style>body {
   background: black;
   color: lime;
+  scrollbar-width: thin;
 }
 
 #graph {
@@ -22,7 +23,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-</style>
+}</style>
 </head>
 <body>
 <canvas id="graph"></canvas>
@@ -48,7 +49,7 @@ const canvas = document.getElementById('graph');
 const ctx = canvas.getContext('2d');
 
 canvas.width = data.length;
-canvas.height = window.innerHeight;
+canvas.height = document.documentElement.clientHeight;
 	
 ctx.fillStyle = 'black';
 ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -60,7 +61,7 @@ var lastTime = 9999999999999999;
 ctx.fillStyle = 'lime';
 ctx.font = '16px monospace';
 
-ctx.fillStyle = 'magenta';
+ctx.fillStyle = 'magenta'; //Draw voltage scale lines
 for (var volt = 11; volt <= 14; volt++) {
 	let y = mapfloat(volt, 10.4, 14.6, canvas.height, 0);
     ctx.fillRect(0,y, canvas.width,1);
@@ -87,11 +88,12 @@ for (var x = 1; x < data.length; x+=1) {
 	lastTime = data[x][0];
 	
 	let y = mapfloat(data[x][1], 10.4, 14.6, canvas.height, 0); //Draw data point
-	ctx.fillRect(x-1,y-1,2,2);
+	ctx.fillRect(x-1,y-1,3,3);
 }
 
 canvas.addEventListener("mousedown", function(e) { //Datapoint pop-up box
-    let x = e.clientX - canvas.getBoundingClientRect().left + 1;
+    //let x = e.clientX - canvas.getBoundingClientRect().left + 1;
+	let x = e.offsetX;
     let date = new Date();
     date.setTime(data[x][0] * 1000);
     let text = "Unix Timestamp: ";
@@ -100,8 +102,7 @@ canvas.addEventListener("mousedown", function(e) { //Datapoint pop-up box
     text += date.toString();
     text += "\nVoltage: ";
     text += data[x][1];
-    alert(text);
-    
+    alert(text);   
 });
 </script>
 </body>
