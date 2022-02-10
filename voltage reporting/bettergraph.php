@@ -23,6 +23,11 @@
   bottom: 0;
   left: 0;
   right: 0;
+  image-rendering: optimizeSpeed;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: optimize-contrast;
+  -ms-interpolation-mode: nearest-neighbor;
 }</style>
 </head>
 <body>
@@ -50,11 +55,15 @@ const ctx = canvas.getContext('2d');
 
 canvas.width = data.length;
 canvas.height = document.documentElement.clientHeight;
-	
+
+ctx.mozImageSmoothingEnabled = false;
+ctx.imageSmoothingEnabled = false;
+
 ctx.fillStyle = 'black';
 ctx.fillRect(0,0,canvas.width,canvas.height);
 
 ctx.lineWidth = 1;
+ctx.strokeStyle = 'lime';
 
 var oldDay = 0;
 var lastTime = 9999999999999999;
@@ -67,6 +76,8 @@ for (var volt = 11; volt <= 14; volt++) {
     ctx.fillRect(0,y, canvas.width,1);
     ctx.fillText(volt + "V", 3, y-10);
 }
+
+ctx.beginPath();
 
 for (var x = 1; x < data.length; x+=1) {
     let date = new Date(); //Draw date lines
@@ -88,8 +99,37 @@ for (var x = 1; x < data.length; x+=1) {
 	lastTime = data[x][0];
 	
 	let y = mapfloat(data[x][1], 10.4, 14.6, canvas.height, 0); //Draw data point
-	ctx.fillRect(x-1,y-1,3,3);
+
+    if (x == 1) {
+        ctx.moveTo(x,y);
+    }
+    else {
+        ctx.lineTo(x,y);
+    }
 }
+ctx.stroke();
+
+
+// Stale data warning
+var dataDate = new Date();
+dataDate.setTime(data[data.length-1][0] * 1000);
+var nowDate = new Date();
+
+var diffHours = (nowDate - dataDate) / 3600 / 1000;
+
+if (diffHours > 1) {
+
+    ctx.fillStyle = 'red';
+    ctx.textAlign = 'right';
+    ctx.font = '50px monospace';
+    var text = "Data stale by ";
+    text += Math.floor(diffHours);
+    text += " hours";
+    
+    ctx.fillRect(canvas.width - 1, 0, 1, canvas.height);
+    ctx.fillText(text, canvas.width, canvas.height * 0.75);
+}
+
 
 canvas.addEventListener("mousedown", function(e) { //Datapoint pop-up box
     //let x = e.clientX - canvas.getBoundingClientRect().left + 1;

@@ -52,8 +52,23 @@ function mapfloat(float $x, float $in_min, float $in_max, float $out_min, float 
 
 foreach ($data as $point) {
 	$pos =  max(0, min(100, mapfloat(floatval($point[1]), 10.4, 14.6, 100, 0)));
-	print("<div><span style=\"top: $pos%\">•</span></div>");
+    $ts = $point[0];
+    $v = $point[1];
+	print("<div><span style=\"top: $pos%\" onclick=\"nfo($ts,$v)\">•</span></div>");
 }
 ?>
 </div>
+<script>
+function nfo(ts,v) {
+    let date = new Date();
+    date.setTime(ts * 1000);
+    let text = "Unix Timestamp: ";
+    text += ts;
+    text += "\nDate: ";
+    text += date.toString();
+    text += "\nVoltage: ";
+    text += v;
+    alert(text);   
+ };
+</script>
 </body>
