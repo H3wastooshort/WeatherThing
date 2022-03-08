@@ -89,16 +89,19 @@ for (var x = 1; x < data.length; x+=1) {
         ctx.fillStyle = 'lime';
 		oldDay = date.getDay();
     }
-	
+
+
+	let y = mapfloat(data[x][1], 10.4, 14.6, canvas.height, 0); //Draw data point
+
 	if (data[x][0] - lastTime > 3600) {//Draw line for data gap
 		ctx.fillStyle = 'orange';
-		ctx.fillRect(x,0,1,canvas.height);
+		ctx.fillRect(x-1,0,2,canvas.height);
 		ctx.fillText("GAP IN DATA", x+5, 100);
 		ctx.fillStyle = 'lime';
+		ctx.moveTo(x,y);
 	}
 	lastTime = data[x][0];
 	
-	let y = mapfloat(data[x][1], 10.4, 14.6, canvas.height, 0); //Draw data point
 
     if (x == 1) {
         ctx.moveTo(x,y);
@@ -108,6 +111,8 @@ for (var x = 1; x < data.length; x+=1) {
     }
 }
 ctx.stroke();
+
+window.scrollTo(canvas.width, 0);
 
 
 // Stale data warning
@@ -123,7 +128,7 @@ if (diffHours > 1) {
     ctx.textAlign = 'right';
     ctx.font = '50px monospace';
     var text = "Data stale by ";
-    text += Math.floor(diffHours);
+    text += diffHours.toFixed(1);
     text += " hours";
     
     ctx.fillRect(canvas.width - 1, 0, 1, canvas.height);
