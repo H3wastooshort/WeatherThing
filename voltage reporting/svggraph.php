@@ -39,12 +39,13 @@ while (($col = fgetcsv($file, 100, ",")) !== FALSE) {
 	array_push($data, $col);
 }
 fclose($file);
+$datapoints = count($data);
 $scale = 0.25;
 if (isset($_GET['scale'])) {$scale = $_GET['scale'];}
 
-$svgwidth = (count($data)-1) * $scale;
+$svgwidth = ($datapoints-1) * $scale;
 
-print("<svg height=\"100%\" viewBox=\"0 0 $svgwidth 100\">");
+print("<svg height=\"100%\" viewBox=\"0 0 $svgwidth 100\">\n");
 
 for ($v=10.5; $v<15; $v+=0.5) {
     round($y = max(0, min(100, mapfloat($v, 10.4, 14.6, 100, 0))),3);
@@ -57,7 +58,7 @@ print("\n");
 $lastDay = 0;
 $lastTS = $data[1][0];
 $y_shift = false;
-for ($p = 1; $p < count($data); $p++) {
+for ($p = 1; $p < $datapoints; $p++) {
 	$currentDate = getdate($data[$p][0]);
 	
 	if ($lastDay != $currentDate['mday']) {
@@ -78,9 +79,35 @@ for ($p = 1; $p < count($data); $p++) {
     $lastTS = $data[$p][0] + 3600;
 }
 
+
+$maxOnDay = 0;
+$minOnDay = 9999;
+$lastDayX = 0;
+
+for ($p = 1; $p < $datapoints; $p++) {
+	$y =  round(max(0, min(100, mapfloat(floatval($data[$p][1]), 10.4, 14.6, 100, 0))),3);
+    $x = $p * $scale;
+	$currentDate = getdate($data[$p][0]);
+	
+    $maxOnDay = max($maxOnDay, $data[$p][1]);
+    $minOnDay = min($minOnDay, $data[$p][1]);
+
+	if ($lastDay != $currentDate['mday'] or $p == $datapoints-1) {
+        //print minmax
+		
+        print("<text class=\"min_max_label\" x=\"$lastDayX\" y=\"5\">MAX $maxOnDay V\nMIN $minOnDay V</text>\n");
+
+        $lastDay = $currentDate['mday'];
+		$lastDayX = $x+1;
+        $maxOnDay = 0;
+        $minOnDay = 9999;
+	}
+}
+
+
 print("\n<polyline points=\"");
 
-for ($p = 1; $p < count($data); $p++) {
+for ($p = 1; $p < $datapoints; $p++) {
 	$y =  round(max(0, min(100, mapfloat(floatval($data[$p][1]), 10.4, 14.6, 100, 0))),3);
     $x = $p * $scale;
     $ts = $data[$p][0];
@@ -90,9 +117,9 @@ for ($p = 1; $p < count($data); $p++) {
 
 print('" fill="none" stroke="lime" style="stroke-width: 0.1;"/>');
 
-if ($data[count($data)-1][0] < time() - 3600) {
-        $x = ((count($data) - 1) * $scale);
-        $h = round((time() - $data[count($data)-1][0]) / 3600, 1);
+if ($data[$datapoints-1][0] < time() - 3600) {
+        $x = (($datapoints - 1) * $scale);
+        $h = round((time() - $data[$datapoints-1][0]) / 3600, 1);
         print("<line x1=\"$x\" y1=\"0\" x2=\"$x\" y2=\"100\" class=\"stale_line\" /><text class=\"stale_label\" x=\"$x\" y=\"80\">DATA STALE BY $h HOURS!</text>\n");
 }
 ?>
@@ -106,6 +133,8 @@ if ($data[count($data)-1][0] < time() - 3600) {
 .gap_line {stroke-width: 0.25; stroke: orange;}
 .stale_label {font: 4px monospace; fill: red; text-anchor: end;}
 .stale_line {stroke-width: 0.25; stroke: red;}
+.min_max_line {stroke-width: 0.1; stroke: gray;}
+.min_max_label {font: 2.25px monospace; fill: white;}
 </style>
 </svg>
 </div>
