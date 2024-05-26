@@ -50,6 +50,7 @@ void connect_gprs() {
     dontCrashOnMe++; //Increment Trial counter.
     if (dontCrashOnMe >= 100) {
       wdt_reset(); //Reset Watchdog
+      gprs.closeConn();
       gprs.connect(); //Try connecting again
     }
     if (dontCrashOnMe >= 200) {

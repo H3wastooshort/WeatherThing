@@ -32,15 +32,6 @@
 #include "api.h"
 #include "debug.h"
 
-
-//Library defines
-
-
-
-//trash
-uint16_t x = 0;
-
-
 void init_all() {
   lcd.setCursor(0, 0);
   lcd.print(F("    B  DG   . = OK "));
@@ -66,18 +57,16 @@ void init_all() {
     if (nogsmerr) {
       Serial.println(F("Sending SMS"));
       sms.send(sos_number, smsreport.c_str());
-    }
-    else {
+    } else {
       uint32_t reset_timenow = millis();
       while (true) {
-        if (reset_timenow - millis() > 900000) { //Wait 15 Mins
-          wdt_enable(WDTO_15MS); //reset via watchdog
+        if (reset_timenow - millis() > 900000) {  //Wait 15 Mins
+          wdt_enable(WDTO_15MS);                  //reset via watchdog
         }
         digitalWrite(ERROR_LED_PIN, HIGH);
         delay(100);
         digitalWrite(ERROR_LED_PIN, LOW);
         delay(100);
-
       }
     }
   }
@@ -137,7 +126,7 @@ void setup() {
   pinMode(STATUS_LED_PIN, OUTPUT);
   pinMode(ERROR_LED_PIN, OUTPUT);
   pinMode(GSM_LED_PIN, OUTPUT);
-  pinMode(41, OUTPUT);
+  pinMode(41, OUTPUT);  //what does this do?
   analogReference(INTERNAL1V1);
   digitalWrite(41, LOW);
   Wire.setClock(10000);
