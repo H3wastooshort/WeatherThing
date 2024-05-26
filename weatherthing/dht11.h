@@ -1,7 +1,6 @@
 #define H_DHT11
 
 float idtempc   = 0;
-float idtempf   = 0;
 float idhumid   = 0;
 
 DHT dht(DHT_PIN, DHT11);
@@ -29,6 +28,5 @@ void init_dht11() {
 void get_dht11() {
   Serial.println(F("Getting DHT11."));
   idtempc = dht.readTemperature();
-  idtempf = dht.readTemperature(true);
   idhumid = dht.readHumidity();
 }

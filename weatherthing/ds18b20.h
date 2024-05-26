@@ -1,6 +1,5 @@
 #define H_DS18B20
 
-float soiltempf = 0;
 float soiltempc = 0;
 
 OneWire oneWire(ONEWIRE_PIN);
@@ -46,5 +45,4 @@ void get_ds18b20() {
   ds.requestTemperatures();
   delay(1000);
   soiltempc = ds.getTempC(insideThermometer);
-  soiltempf = DallasTemperature::toFahrenheit(soiltempc);
 }

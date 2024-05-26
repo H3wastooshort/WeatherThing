@@ -12,13 +12,13 @@ void uploadWU() {
   req += "&dateutc=now";
   if (hasBME) {
     req += "&tempf=";
-    req += tempf;
+    req += celsius_to_farenheit(tempc);
     req += "&dewptf=";
-    req += dewptf;
+    req += celsius_to_farenheit(dewpointC(tempc, humidity));
     req += "&humidity=";
     req += humidity;
     req += "&baromin=";
-    req += press_in;
+    req += pascal_to_inHg(press_pa);
   }
   if (hasSI) {
     req += "&UV=";
@@ -26,11 +26,11 @@ void uploadWU() {
   }
   if (hasDS) {
     req += "&soiltempf=";
-    req += soiltempf;
+    req += celsius_to_farenheit(soiltempc);
   }
   if (hasDHT) {
     req += "&indoortempf=";
-    req += idtempf;
+    req += celsius_to_farenheit(idtempc);
     req += "&indoorhumidity=";
     req += idhumid;
   }
@@ -67,7 +67,7 @@ void uploadOWM() {
     req += ", \"humidity\": ";
     req += humidity;
     req += ", \"pressure\": ";
-    req += press_hpa;
+    req += press_pa / 100.0;
     req += ", \"dew_point\": ";
     req += dewptc;
   }
