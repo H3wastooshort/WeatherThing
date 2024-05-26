@@ -111,7 +111,6 @@ void init_gsm() {
     noerrors = false;
     nogsmerr = false;
     lcd.print(F("*"));
-    smsreport += "GSM: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
     hasGSM = false;
@@ -123,7 +122,6 @@ void init_gsm() {
     noerrors = false;
     nogsmerr = false;
     lcd.print(F(","));
-    smsreport += "SIM: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
     hasGSM = false;
@@ -147,7 +145,6 @@ void init_gsm() {
   connect_gprs();
   disconnect_gprs();
   lcd.print(F("."));
-  smsreport += "GSM: OK\n";
   Serial.println(F("GSM OK"));
   Serial.println(F(""));
   digitalWrite(13, LOW);

@@ -16,7 +16,6 @@ void init_ds18b20() {
   if (!dsdev) {
     noerrors = false;
     lcd.print(F("*"));
-    smsreport += "DS: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
     hasDS = false;
@@ -36,7 +35,6 @@ void init_ds18b20() {
 
   if (dsdev) {
     lcd.print(F("."));
-    smsreport += "DS: OK\n";
     Serial.println(F("OK"));
     Serial.println(F(""));
     hasDS = true;

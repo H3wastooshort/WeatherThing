@@ -7,6 +7,4 @@ bool hasDS = false;
 bool hasDHT = false;
 bool hasGSM = false;
 
-String smsreport = "Report:\n";
-
 unsigned long timenow_upload = 0;

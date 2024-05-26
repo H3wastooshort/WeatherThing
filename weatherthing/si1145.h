@@ -10,7 +10,6 @@ void init_si1145 () {
   Serial.println(F("Init: SI1145"));
   if (uv.begin()) {
     lcd.print(F("."));
-    smsreport += "UV: OK\n";
     Serial.println(F("OK"));
     Serial.println(F(""));
     hasSI = true;
@@ -18,7 +17,6 @@ void init_si1145 () {
   else {
     noerrors = false;
     lcd.print(F("*"));
-    smsreport += "UV: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
     hasSI = false;

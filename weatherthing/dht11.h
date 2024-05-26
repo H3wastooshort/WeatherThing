@@ -13,7 +13,6 @@ void init_dht11() {
   float t = dht.readTemperature();
   if (!isnan(h) || !isnan(t)) {
     lcd.print(F("."));
-    smsreport += "DHT: OK\n";
     Serial.println(F("OK"));
     Serial.println(F(""));
     hasDHT = true;
@@ -21,7 +20,6 @@ void init_dht11() {
   else {
     noerrors = false;
     lcd.print(F("*"));
-    smsreport += "DHT: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
     hasDHT = false;

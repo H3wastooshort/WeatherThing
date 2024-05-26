@@ -14,7 +14,6 @@ void init_bme280() {
   Serial.println(F("Init: BME280"));
   if (bme.begin(0x76)) {
     lcd.print(F("."));
-    smsreport += "BME: OK\n";
     Serial.println(F("OK"));
     Serial.println(F(""));
     hasBME = true;
@@ -22,7 +21,6 @@ void init_bme280() {
   else {
     noerrors = false;
     lcd.print(F("*"));
-    smsreport += "BME: ERR\n";
     Serial.println(F("ERROR"));
     Serial.println(F(""));
     hasBME = false;

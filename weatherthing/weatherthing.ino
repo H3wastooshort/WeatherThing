@@ -56,6 +56,15 @@ void init_all() {
     lcd.print(F("ERROR"));
     if (nogsmerr) {
       Serial.println(F("Sending SMS"));
+      String smsreport = F("Report:");
+      smsreport += F("\nBME ");
+      smsreport += hasBME;
+      smsreport += F("\nSI ");
+      smsreport += hasSI;
+      smsreport += F("\nDHT ");
+      smsreport += hasDHT;
+      smsreport += F("\nDS ");
+      smsreport += hasDS;
       sms.send(sos_number, smsreport.c_str());
     } else {
       uint32_t reset_timenow = millis();
