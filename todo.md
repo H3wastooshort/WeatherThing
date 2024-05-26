@@ -4,3 +4,4 @@ TODO:
  * report all sensors to stats server
  * refactor code!! stop using global vars! use classes for sensor types
  * use less RAM, have only ONE unit of sensor in ram, stream requests out
+ * rework WNW average and min/max code

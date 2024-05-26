@@ -7,8 +7,9 @@ float wind_dir_2m = 0;
 float rain_1h     = 0;
 float rain_day    = 0;
 uint16_t rainHour[60];
-uint8_t wind2min[8];
-int dir2min[8];
+#define AVG_MIN 8
+uint8_t wind2min[AVG_MIN];
+int dir2min[AVG_MIN];
 uint32_t raintime    = 0;
 uint32_t rainlast    = 0;
 uint32_t lastWindCheck = 0;
@@ -104,7 +105,7 @@ void calc_avgs() {
 
   //Wind Average
   uint8_t sum1 = 0;
-  for (int thisReading = 0; thisReading < 60; thisReading++) {
+  for (int thisReading = 0; thisReading < AVG_MIN; thisReading++) {
     sum1 += wind2min[thisReading];
   }
   // calculate the average:
@@ -112,7 +113,7 @@ void calc_avgs() {
 
   //Wind Dir Average
   int sum2 = 0;
-  for (int thisReading = 0; thisReading < 60; thisReading++) {
+  for (int thisReading = 0; thisReading < AVG_MIN; thisReading++) {
     sum2 += dir2min[thisReading];
   }
   // calculate the average:
