@@ -73,9 +73,9 @@ void init_all() {
         if (reset_timenow - millis() > 900000) { //Wait 15 Mins
           wdt_enable(WDTO_15MS); //reset via watchdog
         }
-        digitalWrite(53, HIGH);
+        digitalWrite(ERROR_LED_PIN, HIGH);
         delay(100);
-        digitalWrite(53, LOW);
+        digitalWrite(ERROR_LED_PIN, LOW);
         delay(100);
 
       }
