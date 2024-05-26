@@ -22,7 +22,7 @@ void print_lcd() {
   }
   if (hasBME) {
     lcd.print(F(" P: "));
-    lcd.print(press_hpa);
+    lcd.print(press_pa / 100.0);
     lcd.print(F("hPa"));
   }
 
@@ -56,41 +56,36 @@ void print_lcd() {
 void print_sensors() {
   Serial.println(F("Sensor Values:"));
   Serial.println(F(""));
-  Serial.println(F("Temp:"));
+  Serial.println(F("Temp [°C]:"));
   Serial.println(tempc);
-  Serial.println(tempf);
-  Serial.println(F("Dew:"));
-  Serial.println(dewptc);
-  Serial.println(dewptf);
-  Serial.println(F("Hum:"));
+  Serial.println(F("Dew [°C]:"));
+  Serial.println(dewpointC(tempc, humidity));
+  Serial.println(F("Hum [%]:"));
   Serial.println(humidity);
-  Serial.println(F("Press:"));
-  Serial.println(press_hpa);
-  Serial.println(press_in);
-  Serial.println(F("Soil:"));
+  Serial.println(F("Press [Pa]:"));
+  Serial.println(press_pa);
+  Serial.println(F("Soil [°C]:"));
   Serial.println(soiltempc);
-  Serial.println(soiltempf);
   Serial.println(F("UV:"));
   Serial.println(uv_index);
   Serial.println(F("IR:"));
   Serial.println(ir);
   Serial.println(F("Vis:"));
   Serial.println(vis);
-  Serial.println(F("Indoor Temp:"));
+  Serial.println(F("Indoor Temp [°C]:"));
   Serial.println(idtempc);
-  Serial.println(idtempf);
-  Serial.println(F("Indoor Hum:"));
+  Serial.println(F("Indoor Hum [%]:"));
   Serial.println(idhumid);
-  Serial.println(F("Speed:"));
+  Serial.println(F("Speed [mph]:"));
   Serial.println(wind_mph);
   Serial.println(wind_mph_2m);
-  Serial.println(F("Dir:"));
+  Serial.println(F("Dir [°]:"));
   Serial.println(wind_dir);
   Serial.println(wind_dir_2m);
   Serial.println(F("Rain:"));
   Serial.println(rain_1h);
   Serial.println(rain_day);
-  Serial.println(F("GSM Signal %:"));
+  Serial.println(F("GSM Signal [%]:"));
   Serial.println(gsmsigp);
   Serial.println(F("Time:"));
   Serial.print(F("Hour: "));

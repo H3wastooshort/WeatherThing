@@ -69,7 +69,7 @@ void uploadOWM() {
     req += ", \"pressure\": ";
     req += press_pa / 100.0;
     req += ", \"dew_point\": ";
-    req += dewptc;
+    req += dewpointC(tempc, humidity);
   }
 #ifdef WNW_SENS
   req += ", \"rain_1h\": ";
