@@ -28,58 +28,25 @@
 
 #include <avr/wdt.h>
 
-// APN data for Netzclub
-#define GPRS_APN       "pinternet.interkom.de" // replace your GPRS APN
-#define GPRS_LOGIN     ""    // replace with your GPRS login
-#define GPRS_PASSWORD  "" // replace with your GPRS password
-#define RESET_PIN 9
 
-//WU Credentials
-const char serverWU[] = "weatherstation.wunderground.com";
-const char pathWU[] = "/weatherstation/updateweatherstation.php";
-const char WU_ID[] = "";
-const char WU_PASS [] = "";
-
-//OWM credentials
-const String idOWM = "";
-const String keyOWM = "";
-
-//Stats Server
-const String statURL = "";
-
-//SMS Stuff
-char* sos_number = "";
-
-//Voltage Devider
-#define VOLTAGE_AT_1V1 14.6 //Input voltage that results in 1.1 Volts at A3
-
-//NTP Things
-#define TIMEZONE 1
-#define NTPSERVER "162.159.200.123"
-//Sensor config
-//#define WNW_SENS //Wind and Weather/Rain sensors upload enable
-#define MPH_PER_RPM 1.492 //RPM per MPH
-#define IN_PER_BCKT 0.011 //Inches per rain sensor flip
-uint32_t uploadinterval = 300000;
+#include "secrets.h"
+#include "config.h"
 
 //Library defines
 
-GSMSim gsm(Serial1, RESET_PIN, 52, true);
-GSMSimGPRS gprs(Serial1, RESET_PIN, 52, true);
-GSMSimHTTP http(Serial1, RESET_PIN, 52, true);
-GSMSimSMS sms(Serial1, RESET_PIN, 52, true);
-GSMSimTime ntp(Serial1, RESET_PIN, 52, true);
+GSMSim gsm(GSM_SERIAL, RESET_PIN, 52, true);
+GSMSimGPRS gprs(GSM_SERIAL, RESET_PIN, 52, true);
+GSMSimHTTP http(GSM_SERIAL, RESET_PIN, 52, true);
+GSMSimSMS sms(GSM_SERIAL, RESET_PIN, 52, true);
+GSMSimTime ntp(GSM_SERIAL, RESET_PIN, 52, true);
 
 Adafruit_BME280 bme;
 Adafruit_SI1145 uv = Adafruit_SI1145();
-OneWire oneWire(12);
+OneWire oneWire(ONEWIRE_PIN);
 DallasTemperature ds(&oneWire);
 DeviceAddress insideThermometer;
-DHT dht(8, DHT11);
-LiquidCrystal lcd(39, 43, 45, 47, 49, 51);
-
-//OWM Credentials
-
+DHT dht(DHT_PIN, DHT11);
+LiquidCrystal lcd(LCD_PINS);
 
 
 //Units measured
