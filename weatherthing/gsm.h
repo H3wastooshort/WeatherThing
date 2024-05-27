@@ -36,6 +36,7 @@ void reset_gsm() {
   sms.setTextMode(true);
   gsm.setRingerVolume(100);
   gsm.setSpeakerVolume(100);
+  sms.setPreferredSMSStorage("SM","SM","SM");
   //gsm.setCallReject(true);
   delay(100);
 }
