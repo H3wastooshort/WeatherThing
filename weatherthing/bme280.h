@@ -17,7 +17,7 @@ void init_bme280() {
   }
   else {
     noerrors = false;
-    lcd.print('X');
+    lcd.print('*');
     Serial.println(F("ERROR"));
     Serial.println();
     hasBME = false;

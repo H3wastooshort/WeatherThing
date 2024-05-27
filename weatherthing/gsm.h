@@ -98,7 +98,6 @@ void get_gsm() {
 }
 
 void init_gsm() {
-  lcd.setCursor(8, 3);
   Serial.println(F("Init: GSM"));
   GSM_SERIAL.begin(9600);
   gsm.reset();
@@ -113,6 +112,7 @@ void init_gsm() {
     lcd.print(F("No GSM module!"));
     noerrors = false;
     nogsmerr = false;
+    lcd.setCursor(8, 3);
     lcd.print('*');
     hasGSM = false;
     return;
@@ -124,6 +124,7 @@ void init_gsm() {
     lcd.print(F("No SIM!"));
     noerrors = false;
     nogsmerr = false;
+    lcd.setCursor(8, 3);
     lcd.print(',');
     hasGSM = false;
     return;
@@ -151,6 +152,7 @@ void init_gsm() {
     lcd.print(F("GPRS ERROR!"));
     noerrors = false;
     nogsmerr = false;
+    lcd.setCursor(8, 3);
     lcd.print('*');
     hasGSM = false;
     return;
@@ -158,6 +160,7 @@ void init_gsm() {
   disconnect_gprs();
   lcd.setCursor(0, 0);
   lcd_clear_line();
+  lcd.setCursor(8, 3);
   lcd.print('.');
   Serial.println(F("GSM OK"));
   Serial.println();
