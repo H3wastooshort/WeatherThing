@@ -72,25 +72,43 @@ void loop() {
     timenow_upload = millis();
     digitalWrite(13, HIGH);
     lcd.setCursor(0, 3);
-    lcd.print(F("Connecting...       "));
+    lcd_clear_line();
+    lcd.setCursor(0, 3);
+    lcd.print(F("Connecting..."));
     if (!connect_gprs())
       while (1) {}  //Give up and wait for Watchdog to reset the Arduino
+
+#ifdef UPLOAD_WU
     lcd.setCursor(0, 3);
-    lcd.print(F("Uploading to WU...  "));
+    lcd_clear_line();
+    lcd.setCursor(0, 3);
+    lcd.print(F("Uploading to WU..."));
     uploadWU();
+#endif
+#ifdef UPLOAD_OWM
+    lcd.setCursor(0, 3);
+    lcd_clear_line();
     lcd.setCursor(0, 3);
     lcd.print(F("Uploading to OWM... "));
     uploadOWM();
+#endif
+#ifdef UPLOAD_STATS
     lcd.setCursor(0, 3);
-    lcd.print(F("Uploading Stats... "));
+    lcd_clear_line();
+    lcd.setCursor(0, 3);
+    lcd.print(F("Uploading Stats..."));
     uploadStats();
+#endif
+
     lcd.setCursor(0, 3);
-    lcd.print(F("Disconnecting...    "));
+    lcd_clear_line();
+    lcd.setCursor(0, 3);
+    lcd.print(F("Disconnecting..."));
     disconnect_gprs();
     digitalWrite(13, LOW);
     delay(1000);
     lcd.setCursor(0, 3);
-    lcd.print(F("                    "));
+    lcd_clear_line();
   }
   delay(5000);
 }
