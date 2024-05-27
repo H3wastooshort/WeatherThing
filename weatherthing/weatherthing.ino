@@ -75,9 +75,10 @@ void loop() {
     lcd_clear_line();
     lcd.setCursor(0, 3);
     lcd.print(F("Connecting..."));
-    if (!connect_gprs())
-      while (1) {}  //Give up and wait for Watchdog to reset the Arduino
-
+    if (!connect_gprs()) {  //Give up and wait for Watchdog to reset the Arduino
+      wdt_enable(WDTO_15MS);
+      while (1) {}
+    }
 #ifdef UPLOAD_WU
     lcd.setCursor(0, 3);
     lcd_clear_line();

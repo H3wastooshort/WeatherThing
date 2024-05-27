@@ -19,7 +19,7 @@ void init_all() {
 
   //noerrors=true; //Ignore all errors and carry on
 
-
+  wdt_reset();
   if (!noerrors) {
     Serial.println(F("Missing Sensors!"));
     lcd.print(F("ERROR"));
@@ -35,10 +35,11 @@ void init_all() {
       smsreport += F("\nDS ");
       smsreport += hasDS;
       sms.send(sos_number, smsreport.c_str());
+      Serial.println(smsreport);
     } else {
       uint32_t reset_timenow = millis();
       while (true) {
-        if (reset_timenow - millis() > 900000) {  //Wait 15 Mins
+        if (millis() - reset_timenow > 300000) {  //Wait 5 Mins
           wdt_enable(WDTO_15MS);                  //reset via watchdog
         }
         digitalWrite(ERROR_LED_PIN, HIGH);
