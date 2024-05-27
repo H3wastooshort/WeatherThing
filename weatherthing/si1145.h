@@ -7,18 +7,19 @@ float ir = 0;
 Adafruit_SI1145 uv = Adafruit_SI1145();
 
 void init_si1145 () {
+  lcd.setCursor(5, 3);
   Serial.println(F("Init: SI1145"));
   if (uv.begin()) {
-    lcd.print(F("."));
+    lcd.write('.');
     Serial.println(F("OK"));
-    Serial.println(F(""));
+    Serial.println();
     hasSI = true;
   }
   else {
     noerrors = false;
-    lcd.print(F("*"));
+    lcd.print('*');
     Serial.println(F("ERROR"));
-    Serial.println(F(""));
+    Serial.println();
     hasSI = false;
   }
 }

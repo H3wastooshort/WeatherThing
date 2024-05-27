@@ -7,6 +7,7 @@ DallasTemperature ds(&oneWire);
 DeviceAddress insideThermometer;
 
 void init_ds18b20() {
+  lcd.setCursor(6, 3);
   Serial.println(F("Init: DS18B20"));
   ds.begin();
   // locate devices on the bus
@@ -14,9 +15,9 @@ void init_ds18b20() {
   bool dsdev = ds.getAddress(insideThermometer, 0);
   if (!dsdev) {
     noerrors = false;
-    lcd.print(F("*"));
+    lcd.print('*');
     Serial.println(F("ERROR"));
-    Serial.println(F(""));
+    Serial.println();
     hasDS = false;
     return;
   }
@@ -33,9 +34,9 @@ void init_ds18b20() {
   Serial.println();
 
   if (dsdev) {
-    lcd.print(F("."));
+    lcd.print('.');
     Serial.println(F("OK"));
-    Serial.println(F(""));
+    Serial.println();
     hasDS = true;
   }
 }

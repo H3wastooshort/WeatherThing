@@ -8,17 +8,18 @@ Adafruit_BME280 bme;
 
 void init_bme280() {
   Serial.println(F("Init: BME280"));
+  lcd.setCursor(4, 3);
   if (bme.begin(0x76)) {
-    lcd.print(F("."));
+    lcd.print('.');
     Serial.println(F("OK"));
-    Serial.println(F(""));
+    Serial.println();
     hasBME = true;
   }
   else {
     noerrors = false;
-    lcd.print(F("*"));
+    lcd.print('X');
     Serial.println(F("ERROR"));
-    Serial.println(F(""));
+    Serial.println();
     hasBME = false;
   }
 }

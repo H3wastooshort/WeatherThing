@@ -10,17 +10,18 @@ void init_dht11() {
   dht.begin();
   float h = dht.readHumidity();
   float t = dht.readTemperature();
+  lcd.setCursor(7, 3);
   if (!isnan(h) || !isnan(t)) {
-    lcd.print(F("."));
+    lcd.print('.');
     Serial.println(F("OK"));
-    Serial.println(F(""));
+    Serial.println();
     hasDHT = true;
   }
   else {
     noerrors = false;
-    lcd.print(F("*"));
+    lcd.print('*');
     Serial.println(F("ERROR"));
-    Serial.println(F(""));
+    Serial.println();
     hasDHT = false;
   }
 }
