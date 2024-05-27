@@ -27,7 +27,6 @@ void reset_gsm() {
   Serial.print(F("IMEI: "));
   Serial.println(gsm.moduleIMEI());
 
-  gsm.setPhoneFunc(1);
   delay(50);
   Serial.println("Setting APN");
   gprs.gprsInit(GPRS_APN, GPRS_LOGIN, GPRS_PASSWORD);
@@ -35,10 +34,9 @@ void reset_gsm() {
   Serial.println(ntp.setServer(TIMEZONE, NTPSERVER));
   delay(50);
   sms.setTextMode(true);
-  delay(50);
   gsm.setRingerVolume(100);
-  delay(50);
   gsm.setSpeakerVolume(100);
+  //gsm.setCallReject(true);
   delay(100);
 }
 
@@ -57,10 +55,13 @@ void sync_time() {
 bool connect_gprs() {
   wdt_enable(WDTO_8S);  //Enable Watchdog
   uint8_t dontCrashOnMe = 0;
-  Serial.print(F("Connecting Network"));
+
+  gsm.setPhoneFunc(1);
+  delay(100);
+  Serial.print(F("Connecting GSM Network"));
   while (!gsm.isRegistered()) {
     wdt_reset();  //Reset Watchdog
-    Serial.print(F("."));
+    Serial.print('.');
     delay(420);
     dontCrashOnMe++;
     if (dontCrashOnMe >= 100) {
@@ -76,11 +77,11 @@ bool connect_gprs() {
   wdt_reset();  //Reset Watchdog
   delay(50);
   dontCrashOnMe = 0;
-  Serial.println(F("Connecting GPRS"));
+  Serial.println(F("Connecting GPRS Internet"));
   gprs.connect();                //Connect Command
   wdt_reset();                   //Reset Watchdog
   while (!gprs.isConnected()) {  //Wait for connection.
-    Serial.print(F("."));
+    Serial.print(',');
     wdt_reset();  //Reset Watchdog
     delay(420);
     dontCrashOnMe++;  //Increment Trial counter.
@@ -107,6 +108,9 @@ bool connect_gprs() {
 
 void disconnect_gprs() {
   gprs.closeConn();
+  delay(500);
+  gsm.setPhoneFunc(4);
+  delay(500);
   Serial.println(F("GPRS disconnected."));
 }
 
@@ -154,6 +158,17 @@ void init_gsm() {
     Serial.println(F("No SIM Card detected!"));
     lcd.setCursor(0, 0);
     lcd.print(F("No SIM!"));
+    noerrors = false;
+    nogsmerr = false;
+    lcd.setCursor(8, 3);
+    lcd.print('~');
+    hasGSM = false;
+    return;
+  }
+  if (gsm.pinStatus() != 0) {
+    Serial.println(F("Please remove PIN from SIM Card."));
+    lcd.setCursor(0, 0);
+    lcd.print(F("SIM needs PIN!"));
     noerrors = false;
     nogsmerr = false;
     lcd.setCursor(8, 3);
