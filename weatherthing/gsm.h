@@ -17,6 +17,42 @@ GSMSimHTTP http(GSM_SERIAL, RESET_PIN, GSM_LED_PIN, true);
 GSMSimSMS sms(GSM_SERIAL, RESET_PIN, GSM_LED_PIN, true);
 GSMSimTime ntp(GSM_SERIAL, RESET_PIN, GSM_LED_PIN, true);
 
+void reset_gsm() {
+  gsm.reset();
+  gsm.init();
+  sms.initSMS();
+  http.init();
+  ntp.init();
+  delay(500);
+  Serial.print(F("IMEI: "));
+  Serial.println(gsm.moduleIMEI());
+
+  gsm.setPhoneFunc(1);
+  delay(50);
+  Serial.println("Setting APN");
+  gprs.gprsInit(GPRS_APN, GPRS_LOGIN, GPRS_PASSWORD);
+  Serial.println("Setting NTP server");
+  Serial.println(ntp.setServer(TIMEZONE, NTPSERVER));
+  delay(50);
+  sms.setTextMode(true);
+  delay(50);
+  gsm.setRingerVolume(100);
+  delay(50);
+  gsm.setSpeakerVolume(100);
+  delay(100);
+}
+
+
+uint32_t last_ntp_sync = 0;
+void sync_time() {
+  Serial.println(F("Getting Time"));
+  ntp.syncFromServer();
+  last_ntp_sync = millis();
+  Serial.print(F("DateTime: "));
+  Serial.println(ntp.getRaw());
+  Serial.println();
+}
+
 //reconnecting and disconnecting gprs
 bool connect_gprs() {
   wdt_enable(WDTO_8S);  //Enable Watchdog
@@ -49,8 +85,10 @@ bool connect_gprs() {
     delay(420);
     dontCrashOnMe++;  //Increment Trial counter.
     if (dontCrashOnMe >= 100) {
+      Serial.println(F("Timeout. Resetting GSM Module..."));
       wdt_reset();  //Reset Watchdog
       gprs.closeConn();
+      reset_gsm();
       gprs.connect();  //Try connecting again
     }
     if (dontCrashOnMe >= 200) {
@@ -62,11 +100,7 @@ bool connect_gprs() {
   Serial.println(F(""));
   Serial.print(F("Connected!\nIP:"));
   Serial.println(gprs.getIP());
-  Serial.println(F("Getting Time"));
-  ntp.syncFromServer();
-  Serial.print(F("DateTime: "));
-  Serial.println(ntp.getRaw());
-  Serial.println(F(""));
+  if (millis() - last_ntp_sync > NTP_SYNC_INTERVAL) sync_time();
   delay(50);
   return true;
 }
@@ -100,12 +134,10 @@ void get_gsm() {
 void init_gsm() {
   Serial.println(F("Init: GSM"));
   GSM_SERIAL.begin(9600);
-  gsm.reset();
-  gsm.init();
-  sms.initSMS();
-  http.init();
-  ntp.init();
-  delay(500);
+
+  reset_gsm();
+
+
   if (!gsm.setRingerVolume(100)) {
     Serial.println(F("No GSM/GPRS Module detected!"));
     lcd.setCursor(0, 0);
@@ -129,23 +161,12 @@ void init_gsm() {
     hasGSM = false;
     return;
   }
-  delay(50);
-  Serial.print(F("IMEI: "));
-  Serial.println(gsm.moduleIMEI());
-  delay(50);
-  Serial.println("Setting APN");
-  gprs.gprsInit(GPRS_APN, GPRS_LOGIN, GPRS_PASSWORD);
-  Serial.println("Setting NTP server");
-  Serial.println(ntp.setServer(TIMEZONE, NTPSERVER));
-  delay(50);
-  sms.setTextMode(true);
-  delay(50);
-  gsm.setRingerVolume(100);
-  delay(50);
-  gsm.setSpeakerVolume(100);
-  delay(100);
+
+  lcd.setCursor(0, 0);
+  lcd_clear_line();
   lcd.setCursor(0, 0);
   lcd.print(F("Testing GPRS..."));
+
   if (connect_gprs()) {
     Serial.println(F("GPRS ERROR! Check APN, and SIM's Data Plan."));
     lcd.setCursor(0, 0);
@@ -157,9 +178,18 @@ void init_gsm() {
     hasGSM = false;
     return;
   }
+
+  Serial.print(F("Syncing Time..."));
+  lcd.setCursor(0, 0);
+  lcd_clear_line();
+  lcd.setCursor(0, 0);
+  lcd.print(F("Syncing Time..."));
+  sync_time();
+
   disconnect_gprs();
   lcd.setCursor(0, 0);
   lcd_clear_line();
+
   lcd.setCursor(8, 3);
   lcd.print('.');
   Serial.println(F("GSM OK"));

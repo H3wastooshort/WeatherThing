@@ -18,6 +18,7 @@ const uint8_t WINDVANE_PIN = A0;
 //GSM Module
 #define GSM_SERIAL Serial1
 const uint8_t RESET_PIN = 9;
+constexpr uint32_t NTP_SYNC_INTERVAL = 1 * 24 * 60 * 60 * 1000;
 
 //Voltage Divider
 const float VOLTAGE_AT_1V1 = 14.6;  //Input voltage that results in 1.1 Volts at A3
