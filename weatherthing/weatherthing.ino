@@ -23,6 +23,7 @@
 #include "util.h"
 #include "lcd.h"
 #include "gsm.h"
+#include "http.h"
 #include "v_bat.h"
 #include "bme280.h"
 #include "si1145.h"
