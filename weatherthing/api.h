@@ -1,5 +1,8 @@
 //Upload to PWS Networks
 
+WiFiClient client;
+HTTPClient http;
+
 void uploadWU() {
   Serial.println(F("Uploading to Wunderground"));
   String req = "";
@@ -44,11 +47,19 @@ void uploadWU() {
   req += "&winddir_avg2m=";
   req += wind_dir_2m;
 #endif
-  req += "&softwaretype=wetterdings_mega_2560";
+  req += "&softwaretype=wetterdings_esp8266";
   Serial.print(F("Request: "));
   Serial.println(req);
-  String resp = http.get(req, true);
+
+  http.begin(client, req);
+  int16_t code = http.GET();
   Serial.print(F("Response: "));
+  Serial.println(code);
+  if (code == HTTP_CODE_OK) {
+    const String& payload = http.getString();
+    Serial.println(payload);
+  }
+  http.end();
   Serial.println(resp);
 }
 
@@ -87,9 +98,17 @@ void uploadOWM() {
   Serial.println(url);
   Serial.print(F("Request Data: "));
   Serial.println(req);
-  String resp = http.post(url, req, "application/json", true);
+
+  http.begin(client, url);
+  http.addHeader("Content-Type", "application/json");
+  int16_t code = http.POST(req);
   Serial.print(F("Response: "));
-  Serial.println(resp);
+  Serial.println(code);
+  if (code == HTTP_CODE_OK) {
+    const String& payload = http.getString();
+    Serial.println(payload);
+  }
+  http.end();
 }
 
 void uploadStats() {
@@ -99,7 +118,13 @@ void uploadStats() {
 
   Serial.print(F("Request: "));
   Serial.println(url);
-  String resp = http.get(url, true);
+  http.begin(client, url);
+  int16_t code = http.GET();
   Serial.print(F("Response: "));
-  Serial.println(resp);
+  Serial.println(code);
+  if (code == HTTP_CODE_OK) {
+    const String& payload = http.getString();
+    Serial.println(payload);
+  }
+  http.end();
 }

@@ -34,7 +34,7 @@ void init_all() {
       smsreport += hasDHT;
       smsreport += F("\nDS ");
       smsreport += hasDS;
-      sms.send(sos_number, smsreport.c_str());
+      //TODO: send ntfy report
       Serial.println(smsreport);
     } else {
       uint32_t reset_timenow = millis();

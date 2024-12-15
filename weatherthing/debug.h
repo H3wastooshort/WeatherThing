@@ -88,18 +88,6 @@ void print_sensors() {
   Serial.println(F("GSM Signal [%]:"));
   Serial.println(gsmsigp);
   Serial.println(F("Time:"));
-  Serial.print(F("Hour: "));
-  Serial.println(hour);
-  Serial.print(F("Minute: "));
-  Serial.println(minute);
-  Serial.print(F("Second: "));
-  Serial.println(second);
-  Serial.print(F("Day: "));
-  Serial.println(day);
-  Serial.print(F("Month: "));
-  Serial.println(month);
-  Serial.print(F("Year: "));
-  Serial.println(year);
   Serial.println(F("UNIX Timestamp:"));
   Serial.println(uint64ToString((uint64_t)t_of_day));
   Serial.println(F("Voltage:"));

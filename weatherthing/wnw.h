@@ -1,17 +1,17 @@
 #define H_WNW
 
-float wind_mph    = 0;
+float wind_mph = 0;
 float wind_mph_2m = 0;
-int wind_dir      = 0;
+int wind_dir = 0;
 float wind_dir_2m = 0;
-float rain_1h     = 0;
-float rain_day    = 0;
+float rain_1h = 0;
+float rain_day = 0;
 uint16_t rainHour[60];
 #define AVG_MIN 8
 uint8_t wind2min[AVG_MIN];
 int dir2min[AVG_MIN];
-uint32_t raintime    = 0;
-uint32_t rainlast    = 0;
+uint32_t raintime = 0;
+uint32_t rainlast = 0;
 uint32_t lastWindCheck = 0;
 uint16_t windClicks = 0;
 uint8_t avg_index = 0;
@@ -21,6 +21,7 @@ void wind_cnt() {
   windClicks += 1;
 }
 void rain_cnt() {
+  uint8_t minute = ((millis() / 1000) / 60) % 60;
   raintime = millis();
   uint32_t raininterval = raintime - rainlast;
   if (raininterval > 10) {
@@ -32,17 +33,17 @@ void rain_cnt() {
 }
 
 void init_wnw() {
-  
+
   pinMode(WIND_PIN, INPUT_PULLUP);
   pinMode(RAIN_PIN, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(WIND_PIN) , wind_cnt, FALLING);
-  attachInterrupt(digitalPinToInterrupt(RAIN_PIN) , rain_cnt, FALLING);
+  attachInterrupt(digitalPinToInterrupt(WIND_PIN), wind_cnt, FALLING);
+  attachInterrupt(digitalPinToInterrupt(RAIN_PIN), rain_cnt, FALLING);
 }
 
 
 
 
-int16_t calc_windvane(int io) { //TODO: interpolate between values, use array
+int16_t calc_windvane(int io) {  //TODO: interpolate between values, use array
   unsigned int vane;
   vane = analogRead(io);
   if (vane < 380) return 113;
@@ -77,7 +78,6 @@ void get_windspeed() {
   lastWindCheck = millis();
   windSpeed *= MPH_PER_RPM;
   wind_mph = windSpeed;
-
 }
 
 //Calculate all of the averages
@@ -119,8 +119,9 @@ void calc_avgs() {
   // calculate the average:
   wind_dir_2m = (sum2 / 4) / 100;
   //reset day counter
-  if (hour == 1 and minute == 1) {
+  uint32_t last_dc_rst = 0;
+  if (millis() - last_dc_rst > 1000L * 60L * 60L * 24L) {
     rain_day = 0;
+    last_dc_rst = millis();
   }
-
 }

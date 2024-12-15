@@ -1,8 +1,7 @@
-#include <GSMSim.h>
-#include <GSMSimGPRS.h>
-#include <GSMSimHTTP.h>
-#include <GSMSimSMS.h>
-#include <GSMSimTime.h>
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+#include <ESP8266HTTPClient.h>
+
 #include <time.h>
 #include <Wire.h>
 #include <OneWire.h>
@@ -11,10 +10,9 @@
 #include <Adafruit_SI1145.h>
 #include <DallasTemperature.h>
 #include <DHT.h>
-
-#include <LiquidCrystal.h>
-#include <avr/wdt.h>
-
+#include <LiquidCrystal_I2C.h>
+#include <WiFiUdp.h>
+#include <NTPClient.h>
 
 #include "secrets.h"
 #include "config.h"
@@ -23,7 +21,6 @@
 #include "util.h"
 #include "lcd.h"
 #include "gsm.h"
-#include "http.h"
 #include "v_bat.h"
 #include "bme280.h"
 #include "si1145.h"
@@ -39,12 +36,13 @@ void setup() {
   Serial.begin(9600);
   pinMode(STATUS_LED_PIN, OUTPUT);
   pinMode(ERROR_LED_PIN, OUTPUT);
-  pinMode(GSM_LED_PIN, OUTPUT);
   pinMode(41, OUTPUT);  //what does this do?
   analogReference(INTERNAL1V1);
   digitalWrite(41, LOW);
+  Wire.pins(WIRE_PINS);
   Wire.setClock(10000);
-  lcd.begin(20, 4);
+  Wire.begin(WIRE_PINS);
+  lcd.begin(20,4);
   digitalWrite(STATUS_LED_PIN, HIGH);
   delay(100);
   digitalWrite(STATUS_LED_PIN, LOW);

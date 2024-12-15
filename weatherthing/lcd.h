@@ -1,6 +1,6 @@
 #define H_LCD
 
-LiquidCrystal lcd(LCD_PINS);
+LiquidCrystal_I2C lcd(LCD_ADDRESS,20,4);
 
 void lcd_clear_line(uint8_t len = 20, char c = ' ') {
   for (; len > 0; len--) lcd.write(c);
