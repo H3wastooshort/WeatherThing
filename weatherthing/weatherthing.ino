@@ -36,9 +36,7 @@ void setup() {
   Serial.begin(9600);
   pinMode(STATUS_LED_PIN, OUTPUT);
   pinMode(ERROR_LED_PIN, OUTPUT);
-  pinMode(41, OUTPUT);  //what does this do?
-  analogReference(INTERNAL1V1);
-  digitalWrite(41, LOW);
+  //analogReference(INTERNAL1V1);
   Wire.pins(WIRE_PINS);
   Wire.setClock(10000);
   Wire.begin(WIRE_PINS);

@@ -60,7 +60,6 @@ void uploadWU() {
     Serial.println(payload);
   }
   http.end();
-  Serial.println(resp);
 }
 
 void uploadOWM() {
